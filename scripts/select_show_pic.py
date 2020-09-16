@@ -1,6 +1,20 @@
 # Note: to import libraries use the OSGeo4W shell, and run
 # python-qgis -m pip install
 import sys
+import os
+# if using Linux then add path to site-packages, add path to scripts for any system
+if os.name == 'posix':
+    import_path = os.path.expanduser('~/Python/QGIS/venv/lib/python3.8/site-packages')
+    sys.path.insert(0, import_path)
+    import_path = os.path.expanduser('~/Python/QGIS/scripts')
+    sys.path.append(import_path)
+
+elif os.name == 'nt':
+    sys.path.append('D:\\OneDrive\\QGIS\\scripts')
+
+else:
+    pass
+
 import numpy as np
 import psycopg2
 from recordtype import recordtype
@@ -10,7 +24,6 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QImage, QPixmap
 
 # add scripts folder to the path to import modules
-sys.path.append('D:\\OneDrive\\QGIS\\scripts')
 from pyqt_picture import PictureShow
 
 
