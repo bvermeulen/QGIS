@@ -151,6 +151,7 @@ class PictureLinker:
                    icon_path,
                    text,
                    callback,
+                   checkable=True,
                    enabled_flag=True,
                    add_to_menu=True,
                    add_to_toolbar=True,
@@ -162,6 +163,10 @@ class PictureLinker:
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
+
+
+        if checkable:
+            action.setCheckable(True)
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
@@ -188,7 +193,6 @@ class PictureLinker:
             text=self.tr('Show pictures'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        self.first_run = True
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -201,14 +205,20 @@ class PictureLinker:
             self.iface.removeToolBarIcon(action)
 
     def run(self):
-        print(f'----> I am in run at first run: {self.first_run}') #TODO: remove debug print
-        self.first_run = False
-        if not self.first_run:
+        print(f'----> I am in run at first run: {self.actions[0].isChecked()}') #TODO: remove debug print
+
+        try:
+            self.select_pic.deactivate()
+
+        except AttributeError:
             pass
-            #TODO: find graceful way to exit the plugin
 
-        canvas = self.iface.mapCanvas()
-        self.select_pic = SelectPicMapTool(canvas)
-        canvas.setMapTool(self.select_pic)
 
-        # _ = self.select_pic
+        if self.actions[0].isChecked():
+            canvas = self.iface.mapCanvas()
+            self.select_pic = SelectPicMapTool(canvas)
+            canvas.setMapTool(self.select_pic)
+
+        else:
+            print('---> is unchecked ...')
+            self.iface.mapCanvas().unsetMapTool(self.select_pic)
