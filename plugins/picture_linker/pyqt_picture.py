@@ -186,7 +186,7 @@ class PictureShow(QWidget):
             self.id_list[self.index], self.image, self.rotate)
 
     def cntr_quit(self):
-        QApplication.quit()
+        self.close()
 
 
 def main():

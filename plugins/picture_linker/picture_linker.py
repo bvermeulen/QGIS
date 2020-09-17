@@ -86,7 +86,6 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
-        print('----> in SelectPicMapTool')  #TODO: remove debug print
         self.pic_layer = PicLayer()
         self.marker = None
         self.picshow = PictureShow()
@@ -100,7 +99,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
 
         self.reset()
         point = self.pic_layer.select_nearest_picture(point)
-        print(  #TODO: remove debug print
+        print(  #TODO: open console to see result
             f'picture id: {self.pic_layer.nearest_feature.attributes()[2]} - '
             f'year taken: {self.pic_layer.nearest_feature.attributes()[3]:.0f} - '
             f'x: {point.x():.6f}, y: {point.y():.6f}'
@@ -112,8 +111,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
         self.marker = QgsVertexMarker(self.canvas)
         self.marker.setColor(Qt.yellow)
         self.marker.setIconSize(6)
-        # or ICON_BOX, ICON_X
-        self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
+        self.marker.setIconType(QgsVertexMarker.ICON_CROSS)  # or ICON_BOX, ICON_X
         self.marker.setPenWidth(3)
         self.marker.setCenter(point)
         self.marker.show()
@@ -124,9 +122,8 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
         self.picshow.show_picture()
 
     def deactivate(self):
-        print('Deactivate select picture ...') #TODO: remove debug print
         self.reset()
-        QgsMapTool.deactivate(self)
+        self.picshow.cntr_quit()
 
 
 class PictureLinker:
@@ -228,4 +225,5 @@ class PictureLinker:
 
         else:
             print('---> is unchecked ...')
+            self.select_pic.deactivate()
             self.iface.mapCanvas().unsetMapTool(self.select_pic)
