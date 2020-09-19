@@ -31,6 +31,12 @@ pictures_layer = 'picture year'
 d = QgsDistanceArea()
 d.setEllipsoid('WGS84')
 
+tr_wgs = QgsCoordinateTransform(
+    QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
+    QgsCoordinateReferenceSystem('EPSG:4326'),
+    QgsProject.instance().transformContext()
+)
+
 
 class PicLayer():
     def __init__(self):
@@ -48,6 +54,9 @@ class PicLayer():
                 argument: point: QgsPointXY
                 returns: point: QgsPointXY
         '''
+
+        point = tr_wgs.transform(point)
+        print(f'---> x = {point.x()}, y = {point.y()}')
         min_distance = float('inf')
         self._nearest_feature = None
         for feature in self._features:
@@ -56,11 +65,13 @@ class PicLayer():
                 min_distance = distance
                 self._nearest_feature = feature
 
+
         if self._nearest_feature:
-            return self._nearest_feature.geometry().asPoint()
+            point = self._nearest_feature.geometry().asPoint()
+            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
         else:
-            return point
+            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
 
 class SelectPicMapTool(QgsMapToolEmitPoint):
@@ -77,6 +88,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
     def canvasPressEvent(self, e):
         point = self.toMapCoordinates(e.pos())
         point = QgsPointXY(point.x(), point.y())
+        print(f'x={point.x()}, y={point.y()}')
 
         self.reset()
         point = self.pic_layer.select_nearest_picture(point)

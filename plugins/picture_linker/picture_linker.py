@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 /***************************************************************************
  PictureLinker
                                  A QGIS plugin
@@ -20,7 +20,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-"""
+'''
 import os
 
 # if using Linux then add a path to the site-packages
@@ -30,7 +30,8 @@ if os.name == 'posix':
     sys.path.insert(0, import_path)
 
 from qgis.core import (
-    QgsProject, QgsDistanceArea, QgsFeatureRequest, QgsPointXY,
+    QgsProject, QgsDistanceArea, QgsFeatureRequest, QgsPointXY, QgsCoordinateTransform,
+    QgsCoordinateReferenceSystem,
 )
 from qgis.gui import (
     QgsMapTool, QgsMapToolEmitPoint, QgsVertexMarker,
@@ -48,6 +49,12 @@ qInitResources()
 pictures_layer = 'picture year'
 d = QgsDistanceArea()
 d.setEllipsoid('WGS84')
+tr_wgs = QgsCoordinateTransform(
+    # TODO see how to obtain the map crs
+    QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
+    QgsCoordinateReferenceSystem('EPSG:4326'),
+    QgsProject.instance().transformContext()
+)
 
 
 class PicLayer():
@@ -66,6 +73,7 @@ class PicLayer():
                 argument: point: QgsPointXY
                 returns: point: QgsPointXY
         '''
+        point = tr_wgs.transform(point)
         min_distance = float('inf')
         self._nearest_feature = None
         for feature in self._features:
@@ -75,10 +83,11 @@ class PicLayer():
                 self._nearest_feature = feature
 
         if self._nearest_feature:
-            return self._nearest_feature.geometry().asPoint()
+            point = self._nearest_feature.geometry().asPoint()
+            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
         else:
-            return point
+            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
 
 class SelectPicMapTool(QgsMapToolEmitPoint):
