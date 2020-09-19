@@ -50,7 +50,6 @@ pictures_layer = 'picture year'
 d = QgsDistanceArea()
 d.setEllipsoid('WGS84')
 tr_wgs = QgsCoordinateTransform(
-    # TODO see how to obtain the map crs
     QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
     QgsCoordinateReferenceSystem('EPSG:4326'),
     QgsProject.instance().transformContext()
