@@ -42,7 +42,8 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None):
         f'camera model: {pic_meta.camera_model}\n'
         f'location: {lat_lon_str}\n'
         f'file check: {file_meta.file_checked}\n'
-        f'rotate: {pic_meta.rotate:3}'
+        f'rotate: {pic_meta.rotate:3}\n'
+        f'rotate_check: {pic_meta.rotate_checked}'
     )
 
     if index is not None:

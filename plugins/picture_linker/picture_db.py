@@ -111,7 +111,8 @@ class PictureDb:
     PicturesTable = recordtype('PicturesTable',
                                'id, date_picture, md5_signature, camera_make, '
                                'camera_model, gps_latitude, gps_longitude, '
-                               'gps_altitude, gps_img_direction, thumbnail, exif, rotate')
+                               'gps_altitude, gps_img_direction, thumbnail, exif, '
+                               'rotate, rotate_checked')
 
     FilesTable = recordtype('FilesTable',
                             'id, picture_id, file_path, file_name, file_modified, '
@@ -157,6 +158,7 @@ class PictureDb:
             thumbnail=data_from_table_pictures[9],
             exif=data_from_table_pictures[10],
             rotate=data_from_table_pictures[11],
+            rotate_checked=data_from_table_pictures[12],
         )
 
         file_meta = cls.FilesTable(
