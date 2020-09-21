@@ -49,17 +49,18 @@ qInitResources()
 pictures_layer = 'picture year'
 d = QgsDistanceArea()
 d.setEllipsoid('WGS84')
-tr_wgs = QgsCoordinateTransform(
-    QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
-    QgsCoordinateReferenceSystem('EPSG:4326'),
-    QgsProject.instance().transformContext()
-)
 
 
 class PicLayer():
     def __init__(self):
         layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
         self._features = list(layer.getFeatures(QgsFeatureRequest()))
+
+        self.tr_wgs = QgsCoordinateTransform(
+            QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
+            QgsCoordinateReferenceSystem('EPSG:4326'),
+            QgsProject.instance().transformContext()
+        )
 
     @property
     def nearest_feature(self):
@@ -72,7 +73,7 @@ class PicLayer():
                 argument: point: QgsPointXY
                 returns: point: QgsPointXY
         '''
-        point = tr_wgs.transform(point)
+        point = self.tr_wgs.transform(point)
         min_distance = float('inf')
         self._nearest_feature = None
         for feature in self._features:
@@ -83,10 +84,10 @@ class PicLayer():
 
         if self._nearest_feature:
             point = self._nearest_feature.geometry().asPoint()
-            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
+            return self.tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
         else:
-            return tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
+            return self.tr_wgs.transform(point, QgsCoordinateTransform.ReverseTransform)
 
 
 class SelectPicMapTool(QgsMapToolEmitPoint):
