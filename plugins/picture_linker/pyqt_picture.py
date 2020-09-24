@@ -1,5 +1,4 @@
 import io
-from PIL import Image
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QShortcut
