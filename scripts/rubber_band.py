@@ -2,15 +2,27 @@ from qgis.gui import *
 from qgis.PyQt.QtWidgets import QAction, QMainWindow
 from qgis.PyQt.QtCore import Qt
 
+pictures_layer = 'picture year'
+
 class RectangleMapTool(QgsMapToolEmitPoint):
   def __init__(self, canvas):
     self.canvas = canvas
+    self.layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
+
     QgsMapToolEmitPoint.__init__(self, self.canvas)
     self.rubberBand = QgsRubberBand(self.canvas, True)
     self.rubberBand.setColor(Qt.blue)
     self.rubberBand.setFillColor(Qt.transparent)
     self.rubberBand.setWidth(2)
+    self.select_area = None
     self.reset()
+    
+    self.tr_wgs = QgsCoordinateTransform(
+      QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
+      QgsCoordinateReferenceSystem('EPSG:4326'),
+      QgsProject.instance().transformContext()
+    )
+
 
   def reset(self):
     self.startPoint = self.endPoint = None
@@ -27,11 +39,15 @@ class RectangleMapTool(QgsMapToolEmitPoint):
   def canvasReleaseEvent(self, e):
     print('release ....')
     self.isEmittingPoint = False
-    r = self.rectangle()
-    if r is not None:
-      print("Rectangle:", r.xMinimum(),
-            r.yMinimum(), r.xMaximum(), r.yMaximum()
-           )
+    self.rectangle()
+    if self.select_area is not None:
+      print(
+        "Rectangle:", 
+        self.select_area.xMinimum(),
+        self.select_area.yMinimum(), 
+        self.select_area.xMaximum(), 
+        self.select_area.yMaximum()
+    )
 
   def canvasMoveEvent(self, e):
     if not self.isEmittingPoint:
@@ -49,8 +65,7 @@ class RectangleMapTool(QgsMapToolEmitPoint):
     point2 = QgsPointXY(startPoint.x(), endPoint.y())
     point3 = QgsPointXY(endPoint.x(), endPoint.y())
     point4 = QgsPointXY(endPoint.x(), startPoint.y())
-
-    print(f'p1 {startPoint.x():.4f}, {startPoint.y():.4f}')
+        
     self.rubberBand.addPoint(point1, False)
     self.rubberBand.addPoint(point2, False)
     self.rubberBand.addPoint(point3, False)
@@ -60,18 +75,25 @@ class RectangleMapTool(QgsMapToolEmitPoint):
   def rectangle(self):
     if self.startPoint is None or self.endPoint is None:
       return None
+      
     elif (self.startPoint.x() == self.endPoint.x() or \
           self.startPoint.y() == self.endPoint.y()):
       return None
 
-      return QgsRectangle(self.startPoint, self.endPoint)
+    start_point = self.tr_wgs.transform(self.startPoint)
+    end_point = self.tr_wgs.transform(self.endPoint)
+    
+    self.select_area = QgsRectangle(start_point, end_point)
+    selection = QgsFeatureRequest()
+    selection.setFilterRect(self.select_area)
+    for feature in self.layer.getFeatures(selection):
+      print(feature.attributes()[2])
 
   def deactivate(self):
     QgsMapTool.deactivate(self)
     self.deactivated.emit()
 
-def run_script(iface):
-    canvas = iface.mapCanvas()
-    rb = RectangleMapTool(iface.mapCanvas())
-    canvas.setMapTool(rb)
+canvas = iface.mapCanvas()
+rb = RectangleMapTool(iface.mapCanvas())
+canvas.setMapTool(rb)
 

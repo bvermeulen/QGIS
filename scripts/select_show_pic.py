@@ -15,9 +15,6 @@ elif os.name == 'nt':
 else:
     pass
 
-import numpy as np
-import psycopg2
-from recordtype import recordtype
 from qgis.gui import *
 from qgis.PyQt.QtWidgets import QAction, QMainWindow
 from qgis.PyQt.QtCore import Qt

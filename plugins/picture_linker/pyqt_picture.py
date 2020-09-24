@@ -1,14 +1,12 @@
-import sys
 import io
-import json
 from PIL import Image
 from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QApplication, QPushButton,
+    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QShortcut
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
-from .picture_db import PictureDb
+from picture_db import PictureDb
 
 anticlockwise_symbol = '\u21b6'
 clockwise_symbol = '\u21b7'
@@ -24,7 +22,7 @@ def pil2pixmap(pil_image):
 
     return QPixmap.fromImage(qimg)
 
-def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None):
+def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
     try:
         _date_pic = pic_meta.date_picture.strftime("%d-%b-%Y %H:%M:%S")
 
@@ -47,31 +45,23 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None):
     )
 
     if index is not None:
-        text += f'\nindex: {index:6}'
+        text += f'\nindex: {index+1} of {total}'
 
     return text
 
 
 class PictureShow(QWidget):
 
-    def __init__(self, id_list=None):
+    def __init__(self, mode='single_picture'):
         super().__init__()
+
+        self.mode = mode
         self.picdb = PictureDb()
 
-        if id_list:
-            self.id_list = id_list
-            self.initUI()
-            self.index = int(input('What is the start index: '))
-            self.cntr_select_pic(self.id_list[self.index])
-
-        else:
-            self.id_list = None
-            self.initUI()
-            self.image = None
-            self.text = None
-            self.index = None
-
         self.rotate = None
+        self.index = None
+        self.id_list = []
+        self.initUI()
 
     def initUI(self):
         vbox = QVBoxLayout()
@@ -85,15 +75,15 @@ class PictureShow(QWidget):
         hbox_pic_text.addWidget(self.text_lbl)
 
         hbox_buttons = QHBoxLayout()
-        if self.id_list:
-            quit_button = QPushButton('Quit')
-            quit_button.clicked.connect(self.cntr_quit)
+        #quit_button = QPushButton('Quit')
+        #quit_button.clicked.connect(self.cntr_quit)
+        if self.mode != 'single_picture':
             prev_button = QPushButton(left_arrow_symbol)
             prev_button.clicked.connect(self.cntr_prev)
             next_button = QPushButton(right_arrow_symbol)
             next_button.clicked.connect(self.cntr_next)
-            save_button = QPushButton('save')
-            save_button.clicked.connect(self.cntr_save)
+        #save_button = QPushButton('save')
+        #save_button.clicked.connect(self.cntr_save)
 
         clockwise_button = QPushButton(clockwise_symbol)
         clockwise_button.clicked.connect(self.rotate_clockwise)
@@ -103,35 +93,44 @@ class PictureShow(QWidget):
         hbox_buttons.setAlignment(Qt.AlignLeft)
         hbox_buttons.addWidget(anticlockwise_button)
         hbox_buttons.addWidget(clockwise_button)
-        if self.id_list:
+        if self.mode != 'single_picture':
             hbox_buttons.addWidget(prev_button)
             hbox_buttons.addWidget(next_button)
-            hbox_buttons.addWidget(save_button)
-            hbox_buttons.addWidget(quit_button)
+            #hbox_buttons.addWidget(save_button)
+            #hbox_buttons.addWidget(quit_button)
 
         vbox.addLayout(hbox_pic_text)
         vbox.addLayout(hbox_buttons)
 
         self.setLayout(vbox)
 
-
-        if self.id_list:
+        if self.mode != 'single_picture':
             QShortcut(Qt.Key_Left, self, self.cntr_prev)
             QShortcut(Qt.Key_Right, self, self.cntr_next)
-            QShortcut(Qt.Key_S, self, self.cntr_save)
-
+        #QShortcut(Qt.Key_S, self, self.cntr_save)
         QShortcut(Qt.Key_Space, self, self.rotate_clockwise)
 
         self.move(400, 300)
         self.setWindowTitle('Picture ... ')
         self.show()
 
+    def call_by_list(self, id_list):
+        self.id_list = id_list
+        self.index = 0
+        self.cntr_select_pic(self.id_list[self.index])
+
+    @property
+    def picture_id(self):
+        return self.id_list[self.index]
+
     def show_picture(self):
         pixmap = pil2pixmap(self.image)
         self.pic_lbl.setPixmap(pixmap)
 
         self.text = meta_to_text(
-            self.pic_meta, self.file_meta, self.lat_lon_str, index=self.index)
+            self.pic_meta, self.file_meta, self.lat_lon_str,
+            index=self.index, total=len(self.id_list)
+        )
         self.text_lbl.setText(self.text)
 
     def rotate_clockwise(self):
@@ -163,7 +162,7 @@ class PictureShow(QWidget):
     def cntr_prev(self):
         self.index -= 1
         if self.index < 0:
-            self.index = 0
+            self.index = len(self.id_list) - 1
 
         self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
             self.picdb.load_picture_meta(self.id_list[self.index]))
@@ -174,7 +173,7 @@ class PictureShow(QWidget):
     def cntr_next(self):
         self.index += 1
         if self.index > len(self.id_list) - 1:
-            self.index = len(self.id_list) - 1
+            self.index = 0
 
         self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
             self.picdb.load_picture_meta(self.id_list[self.index]))
@@ -188,25 +187,3 @@ class PictureShow(QWidget):
 
     def cntr_quit(self):
         self.close()
-
-
-def main():
-    #pylint: disable='anomalous-backslash-in-string
-    '''
-    make a selection in psql, for example:
-    \o name.json
-    select json_build_object('id', json_agg(id)) from pictures
-        where gps_latitude ->> 'ref' in ('N', 'S');
-    '''
-    json_filename = './id_with_location.json'
-    with open(json_filename) as json_file:
-        id_list = json.load(json_file)
-
-    app = QApplication([])
-    # _ = PictureShow()
-    _ = PictureShow(id_list=id_list['id'])
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    main()

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
-from picture_db import PictureDb
+from .picture_db import PictureDb
 
 anticlockwise_symbol = '\u21b6'
 clockwise_symbol = '\u21b7'

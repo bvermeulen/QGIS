@@ -26,7 +26,8 @@ import os
 # if using Linux then add a path to the site-packages
 if os.name == 'posix':
     import sys
-    import_path = os.path.expanduser('~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages')
+    import_path = os.path.expanduser(
+        '~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages')
     sys.path.insert(0, import_path)
 
 from qgis.core import (
@@ -34,25 +35,25 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
 )
 from qgis.gui import (
-    QgsMapTool, QgsMapToolEmitPoint, QgsVertexMarker,
+    QgsMapToolEmitPoint, QgsVertexMarker,
 )
-from qgis.PyQt.QtCore import Qt, QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from .pyqt_picture import PictureShow
 
 # Initialize Qt resources from file resources.py
-from .resources import qInitResources, qCleanupResources
+from .resources import qInitResources
 qInitResources()
 
-pictures_layer = 'picture year'
 d = QgsDistanceArea()
 d.setEllipsoid('WGS84')
 
 
 class PicLayer():
     def __init__(self):
+        pictures_layer = 'picture year'
         layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
         self._features = list(layer.getFeatures(QgsFeatureRequest()))
 
@@ -97,7 +98,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
 
         self.pic_layer = PicLayer()
         self.marker = None
-        self.picshow = PictureShow()
+        self.picshow = PictureShow(mode='single_picture')
 
     def reset(self):
         self.canvas.scene().removeItem(self.marker)
@@ -108,7 +109,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
 
         self.reset()
         point = self.pic_layer.select_nearest_picture(point)
-        print(  #TODO: open console to see result
+        print(  #open console to see result
             f'picture id: {self.pic_layer.nearest_feature.attributes()[2]} - '
             f'year taken: {self.pic_layer.nearest_feature.attributes()[3]:.0f} - '
             f'x: {point.x():.6f}, y: {point.y():.6f}'
@@ -140,20 +141,8 @@ class PictureLinker:
 
     def __init__(self, iface):
         self.iface = iface
-
-        self.plugin_dir = os.path.dirname(__file__)
-
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'PictureLinker_{}.qm'.format(locale))
-
-        if os.path.exists(locale_path):
-            self.translator = QTranslator()
-            self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
-
+        self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
+        self.select_pic = None
         self.actions = []
         self.menu = self.tr(u'&Picture linker')
 
@@ -177,7 +166,6 @@ class PictureLinker:
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
 
-
         if checkable:
             action.setCheckable(True)
 
@@ -200,7 +188,7 @@ class PictureLinker:
         return action
 
     def initGui(self):
-        icon_path = ':/plugins/picture_linker/icon.png'
+        icon_path = os.path.join(self.plugin_dir, 'icon.png')
         self.add_action(
             icon_path,
             text=self.tr('Show pictures'),
@@ -218,7 +206,6 @@ class PictureLinker:
             self.iface.removeToolBarIcon(action)
 
     def run(self):
-        print(f'----> I am in run at first run: {self.actions[0].isChecked()}') #TODO: remove debug print
 
         try:
             self.select_pic.deactivate()
@@ -226,13 +213,11 @@ class PictureLinker:
         except AttributeError:
             pass
 
-
         if self.actions[0].isChecked():
             canvas = self.iface.mapCanvas()
             self.select_pic = SelectPicMapTool(canvas)
             canvas.setMapTool(self.select_pic)
 
         else:
-            print('---> is unchecked ...')
             self.select_pic.deactivate()
             self.iface.mapCanvas().unsetMapTool(self.select_pic)
