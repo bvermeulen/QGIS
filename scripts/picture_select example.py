@@ -109,7 +109,7 @@ class SelectRectangleMapTool(QgsMapToolEmitPoint):
         new_counter = self.window_show.button_counter
         if new_counter != self.counter:
             self.counter = new_counter
-            print(f'Button pressed in PictureShow: {self.counter}')
+            print(f'Button pressed in WindowShow: {self.counter}')
 
         else:
             return
