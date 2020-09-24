@@ -97,7 +97,6 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
         self.select_rect_pic = SelectRectanglePicLayer()
-        self.pic_show = PictureShow(mode='multiple_pics')
 
         self.rubberBand = QgsRubberBand(self.canvas, True)
         self.rubberBand.setColor(Qt.blue)
@@ -107,6 +106,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.timer_poll_id = QTimer()
         self.timer_poll_id.timeout.connect(self.show_marker)
         self.marker = None
+        self.pic_show = None
         self.reset()
 
     def reset(self):
@@ -116,6 +116,10 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.timer_poll_id.stop()
         self.pic_id = None
         self.canvas.scene().removeItem(self.marker)
+
+        if self.pic_show:
+            self.pic_show.cntr_quit()
+            self.pic_show = None
 
     def canvasPressEvent(self, e):
         self.reset()
@@ -130,6 +134,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
             self.start_point, self.end_point)
 
         if pic_ids:
+            self.pic_show = PictureShow(mode='multiple_pics')
             self.pic_show.call_by_list(pic_ids)
             self.timer_poll_id.start(POLLING_RATE_MS)
 
@@ -181,7 +186,6 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
     def deactivate(self):
         self.reset()
-        self.pic_show.cntr_quit()
 
 
 class PictureSelect:
