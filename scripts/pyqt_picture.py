@@ -1,10 +1,11 @@
 import io
+from enum import Enum
 from PIL import Image
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QShortcut
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from picture_db import PictureDb
 
@@ -12,6 +13,12 @@ anticlockwise_symbol = '\u21b6'
 clockwise_symbol = '\u21b7'
 right_arrow_symbol = '\u25B6'
 left_arrow_symbol = '\u25C0'
+
+
+class Mode(Enum):
+    Single = 1
+    Multi = 2
+
 
 def pil2pixmap(pil_image):
     bytes_img = io.BytesIO()
@@ -51,10 +58,10 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
 
 
 class PictureShow(QWidget):
+    selected_id_changed = pyqtSignal(int)
 
-    def __init__(self, mode='single_picture'):
+    def __init__(self, mode=Mode.Single):
         super().__init__()
-
         self.mode = mode
         self.picdb = PictureDb()
 
@@ -77,7 +84,7 @@ class PictureShow(QWidget):
         hbox_buttons = QHBoxLayout()
         #quit_button = QPushButton('Quit')
         #quit_button.clicked.connect(self.cntr_quit)
-        if self.mode != 'single_picture':
+        if self.mode == Mode.Multi:
             prev_button = QPushButton(left_arrow_symbol)
             prev_button.clicked.connect(self.cntr_prev)
             next_button = QPushButton(right_arrow_symbol)
@@ -93,7 +100,7 @@ class PictureShow(QWidget):
         hbox_buttons.setAlignment(Qt.AlignLeft)
         hbox_buttons.addWidget(anticlockwise_button)
         hbox_buttons.addWidget(clockwise_button)
-        if self.mode != 'single_picture':
+        if self.mode == Mode.Multi:
             hbox_buttons.addWidget(prev_button)
             hbox_buttons.addWidget(next_button)
             #hbox_buttons.addWidget(save_button)
@@ -104,7 +111,7 @@ class PictureShow(QWidget):
 
         self.setLayout(vbox)
 
-        if self.mode != 'single_picture':
+        if self.mode == Mode.Multi:
             QShortcut(Qt.Key_Left, self, self.cntr_prev)
             QShortcut(Qt.Key_Right, self, self.cntr_next)
         #QShortcut(Qt.Key_S, self, self.cntr_save)
@@ -118,10 +125,6 @@ class PictureShow(QWidget):
         self.id_list = id_list
         self.index = 0
         self.cntr_select_pic(self.id_list[self.index])
-
-    @property
-    def picture_id(self):
-        return self.id_list[self.index]
 
     def show_picture(self):
         pixmap = pil2pixmap(self.image)
@@ -156,6 +159,7 @@ class PictureShow(QWidget):
             self.picdb.load_picture_meta(_id))
 
         if self.pic_meta:
+            self.selected_id_changed.emit(self.id_list[self.index])
             self.rotate = self.pic_meta.rotate
             self.show_picture()
 
@@ -167,6 +171,7 @@ class PictureShow(QWidget):
         self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
             self.picdb.load_picture_meta(self.id_list[self.index]))
         if self.pic_meta:
+            self.selected_id_changed.emit(self.id_list[self.index])
             self.rotate = self.pic_meta.rotate
             self.show_picture()
 
@@ -178,6 +183,7 @@ class PictureShow(QWidget):
         self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
             self.picdb.load_picture_meta(self.id_list[self.index]))
         if self.pic_meta:
+            self.selected_id_changed.emit(self.id_list[self.index])
             self.rotate = self.pic_meta.rotate
             self.show_picture()
 

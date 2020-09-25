@@ -18,11 +18,10 @@ from qgis.gui import (
     QgsMapToolEmitPoint, QgsMapToolEmitPoint, QgsVertexMarker,
 )
 from qgis.PyQt.QtWidgets import QAction, QMainWindow
-from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtCore import Qt
 
-from pyqt_picture import PictureShow
+from pyqt_picture import Mode, PictureShow
 
-POLLING_RATE_MS = 250
 
 class SelectRectanglePicLayer:
     def __init__(self):
@@ -70,23 +69,21 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
         self.select_rect_pic = SelectRectanglePicLayer()
-        self.pic_show = PictureShow(mode='multiple_pics')
+        self.pic_show = PictureShow(mode=Mode.Multi)
 
         self.rubberBand = QgsRubberBand(self.canvas, True)
         self.rubberBand.setColor(Qt.blue)
         self.rubberBand.setFillColor(Qt.transparent)
         self.rubberBand.setWidth(2)
 
-        self.timer_poll_id = QTimer()
-        self.timer_poll_id.timeout.connect(self.show_marker)
         self.marker = None
+        self.pic_show.selected_id_changed.connect(self.show_marker)
         self.reset()
 
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
         self.rubberBand.reset(True)
-        self.timer_poll_id.stop()
         self.pic_id = None
         self.canvas.scene().removeItem(self.marker)
         #self.pic_show.cntr_quit()
@@ -104,7 +101,6 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
         if pic_ids:
             self.pic_show.call_by_list(pic_ids)
-            self.timer_poll_id.start(POLLING_RATE_MS)
 
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:
@@ -125,28 +121,17 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.rubberBand.addPoint(QgsPointXY(end_point.x(), start_point.y()), True)
         self.rubberBand.show()
 
-    def show_marker(self):
-        try:
-            new_pic_id = self.pic_show.picture_id
-
-        except AttributeError:
-            return
-
-        if self.pic_id == new_pic_id:
-            return
-
-        else:
-            self.pic_id = new_pic_id
-            point = self.select_rect_pic.get_mappoint(self.pic_id)
-            if point:
-                self.canvas.scene().removeItem(self.marker)
-                self.marker = QgsVertexMarker(self.canvas)
-                self.marker.setColor(Qt.yellow)
-                self.marker.setIconSize(6)  # or ICON_BOX, ICON_X
-                self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
-                self.marker.setPenWidth(3)
-                self.marker.setCenter(point)
-                self.marker.show()
+    def show_marker(self, _id):
+        point = self.select_rect_pic.get_mappoint(_id)
+        if point:
+            self.canvas.scene().removeItem(self.marker)
+            self.marker = QgsVertexMarker(self.canvas)
+            self.marker.setColor(Qt.yellow)
+            self.marker.setIconSize(6)  # or ICON_BOX, ICON_X
+            self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
+            self.marker.setPenWidth(3)
+            self.marker.setCenter(point)
+            self.marker.show()
 
     def deactivate(self):
         self.reset()
