@@ -74,7 +74,6 @@ class PictureShow(QWidget):
         vbox = QVBoxLayout()
 
         hbox_pic_text = QHBoxLayout()
-
         self.pic_lbl = QLabel()
         hbox_pic_text.addWidget(self.pic_lbl)
         self.text_lbl = QLabel()

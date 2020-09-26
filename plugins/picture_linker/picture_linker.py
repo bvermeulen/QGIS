@@ -41,7 +41,7 @@ from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from .pyqt_picture import PictureShow
+from .pyqt_picture import Mode, PictureShow
 
 # Initialize Qt resources from file resources.py
 from .resources import qInitResources
@@ -98,7 +98,7 @@ class SelectPicMapTool(QgsMapToolEmitPoint):
 
         self.pic_layer = PicLayer()
         self.marker = None
-        self.picshow = PictureShow(mode='single_picture')
+        self.picshow = PictureShow(mode=Mode.Single)
 
     def reset(self):
         self.canvas.scene().removeItem(self.marker)
