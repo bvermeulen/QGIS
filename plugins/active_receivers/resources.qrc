@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/active_receivers" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
