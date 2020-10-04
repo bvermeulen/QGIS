@@ -150,7 +150,6 @@ class ActiveSpreadMapTool(QgsMapToolEmitPoint):
         self.rubber_band.show()
 
     def deactivate(self):
-        print('Deactivate spread tool ...')
         self.reset()
 
 
@@ -172,6 +171,9 @@ class ActiveReceivers:
         self.menu = self.tr(u'&Active Receivers')
         self.first_start = None
         self.spread = None
+        self.azimuth = AZIMUTH
+        self.inline_offset = OFFSET_INLINE
+        self.crossline_offset = OFFSET_CROSSLINE
 
     def tr(self, message):
         return QCoreApplication.translate('ActiveReceivers', message)
@@ -223,7 +225,6 @@ class ActiveReceivers:
                 action)
             self.iface.removeToolBarIcon(action)
 
-
     def run(self):
         try:
             self.spread.deactivate()
@@ -231,29 +232,31 @@ class ActiveReceivers:
         except AttributeError:
             pass
 
-        result = None
+        result = False
         if self.first_start:
             self.first_start = False
-            self.dlg = ActiveReceiversDialog()
-            self.dlg.lineEdit_azimuth.setText(str(AZIMUTH))
-            self.dlg.lineEdit_inline.setText(str(OFFSET_INLINE))
-            self.dlg.lineEdit_crossline.setText(str(OFFSET_CROSSLINE))
+            dlg = ActiveReceiversDialog()
+            dlg.lineEdit_azimuth.setText(str(self.azimuth))
+            dlg.lineEdit_inline.setText(str(self.inline_offset))
+            dlg.lineEdit_crossline.setText(str(self.crossline_offset))
 
-        self.dlg.show()
-        result = self.dlg.exec_()
+            dlg.show()
+            result = dlg.exec_()
 
         if result:
-            azimuth = float(self.dlg.lineEdit_azimuth.text())
-            inline_offset = float(self.dlg.lineEdit_inline.text())
-            crossline_offset = float(self.dlg.lineEdit_crossline.text())
+            self.azimuth = float(dlg.lineEdit_azimuth.text())
+            self.inline_offset = float(dlg.lineEdit_inline.text())
+            self.crossline_offset = float(dlg.lineEdit_crossline.text())
+            dlg.close()
 
-            if self.actions[0].isChecked():
-                canvas = self.iface.mapCanvas()
-                self.spread = ActiveSpreadMapTool(
-                    canvas, azimuth, inline_offset, crossline_offset)
-                canvas.setMapTool(self.spread)
+        if self.actions[0].isChecked():
+            canvas = self.iface.mapCanvas()
+            self.spread = ActiveSpreadMapTool(
+                canvas, self.azimuth, self.inline_offset, self.crossline_offset)
+            canvas.setMapTool(self.spread)
 
-            else:
-                print('need to exit now, not dialog')
-                self.spread.deactivate()
-                self.iface.mapCanvas().unsetMapTool(self.spread)
+        else:
+            print('====> exit plugin')
+            self.spread.deactivate()
+            self.iface.mapCanvas().unsetMapTool(self.spread)
+            self.first_start = True
