@@ -35,21 +35,21 @@
     <rect>
      <x>30</x>
      <y>20</y>
-     <width>91</width>
-     <height>16</height>
+     <width>180</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Azimuth (receiver)</string>
+    <string>Azimuth receivers (degrees)</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEdit_azimuth">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>210</x>
      <y>20</y>
-     <width>121</width>
-     <height>22</height>
+     <width>100</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -59,8 +59,8 @@
     <rect>
      <x>30</x>
      <y>60</y>
-     <width>91</width>
-     <height>16</height>
+     <width>180</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -70,10 +70,10 @@
   <widget class="QLineEdit" name="lineEdit_inline">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>210</x>
      <y>60</y>
-     <width>121</width>
-     <height>22</height>
+     <width>100</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -83,8 +83,8 @@
     <rect>
      <x>30</x>
      <y>100</y>
-     <width>111</width>
-     <height>16</height>
+     <width>180</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -94,10 +94,10 @@
   <widget class="QLineEdit" name="lineEdit_crossline">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>210</x>
      <y>100</y>
-     <width>121</width>
-     <height>22</height>
+     <width>100</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>
