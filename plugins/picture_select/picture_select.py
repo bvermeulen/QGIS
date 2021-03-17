@@ -30,7 +30,7 @@ if os.name == 'posix':
         '~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages')
     sys.path.insert(0, import_path)
 
-from qgis.PyQt.QtCore import Qt, QTimer, QCoreApplication
+from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -48,9 +48,12 @@ from .pyqt_picture import Mode, PictureShow
 from .resources import qInitResources
 qInitResources()
 
+from .picture_select_dlg import PictureSelectDialog
+
+year_range = range(2010, 2022)
 
 class SelectRectanglePicLayer:
-    def __init__(self):
+    def __init__(self, years_selected):
         pictures_layer = 'picture year'
         self.layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
         self.tr_wgs = QgsCoordinateTransform(
@@ -58,6 +61,11 @@ class SelectRectanglePicLayer:
             QgsCoordinateReferenceSystem('EPSG:4326'),
             QgsProject.instance().transformContext()
         )
+        years = tuple(year for year, val in years_selected.items() if val)
+        # add dummy year, yeare to sure tuple has a minimum length 2
+        years = years + (9999, 9999)
+        select_year = f'"year" in {years}'
+        self.layer.setSubsetString(select_year)
 
     def select_pics_in_rectangle(self, start_point, end_point):
         if start_point is None or end_point is None:
@@ -69,32 +77,28 @@ class SelectRectanglePicLayer:
 
         start_point = self.tr_wgs.transform(start_point)
         end_point = self.tr_wgs.transform(end_point)
-
         select_area = QgsRectangle(start_point, end_point)
-        self.selection = QgsFeatureRequest()
-        self.selection.setFilterRect(select_area)
-
+        self.request = QgsFeatureRequest().setFilterRect(select_area)
         picture_ids = []
-        for feature in self.layer.getFeatures(self.selection):
+        for feature in self.layer.getFeatures(self.request):
             picture_ids.append(feature.attributes()[2])
 
         return picture_ids
 
     def get_mappoint(self, pic_id):
-        for feature in self.layer.getFeatures(self.selection):
+        for feature in self.layer.getFeatures(self.request):
             if pic_id == feature.attributes()[2]:
                 return self.tr_wgs.transform(
                     feature.geometry().asPoint(), QgsCoordinateTransform.ReverseTransform)
-
         return None
 
 
 class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
-    def __init__(self, canvas):
+    def __init__(self, canvas, years_selected):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
-        self.select_rect_pic = SelectRectanglePicLayer()
+        self.select_rect_pic = SelectRectanglePicLayer(years_selected)
 
         self.rubberBand = QgsRubberBand(self.canvas, True)
         self.rubberBand.setColor(Qt.blue)
@@ -180,7 +184,9 @@ class PictureSelect:
 
         self.actions = []
         self.menu = self.tr(u'&Picture Select')
+        self.first_start = None
         self.select_pic = None
+        self.years_selection = {year: True for year in year_range}
 
     def tr(self, message):
         return QCoreApplication.translate('PictureSelect', message)
@@ -224,15 +230,17 @@ class PictureSelect:
         return action
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir ,'icon.png')
+        icon_path = os.path.join(self.plugin_dir, 'icon.png')
         self.add_action(
             icon_path,
             text=self.tr('Picture Select'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
+        self.first_start = True
+
     def unload(self):
-        """Removes the plugin menu item and icon from QGIS GUI."""
+        '''Removes the plugin menu item and icon from QGIS GUI.'''
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&Picture Select'),
@@ -247,12 +255,26 @@ class PictureSelect:
         except AttributeError:
             pass
 
+        result = False
+        if self.first_start:
+            self.first_start = False
+            dlg = PictureSelectDialog()
+            for year, val in self.years_selection.items():
+                getattr(dlg, f'cb_{year}').setChecked(val)
+            dlg.show()
+            result = dlg.exec_()
+
+        if result:
+            for year in self.years_selection:
+                self.years_selection[year] = getattr(dlg, f'cb_{year}').isChecked()
+            dlg.close()
 
         if self.actions[0].isChecked():
             canvas = self.iface.mapCanvas()
-            self.select_pic = SelectRectanglePicMapTool(canvas)
+            self.select_pic = SelectRectanglePicMapTool(canvas, self.years_selection)
             canvas.setMapTool(self.select_pic)
 
         else:
             self.select_pic.deactivate()
             self.iface.mapCanvas().unsetMapTool(self.select_pic)
+            self.first_start = True

@@ -94,15 +94,6 @@ class DbUtils:
 
         return wrapper
 
-    @staticmethod
-    def get_cursor(cursor):
-        if cursor:
-            return cursor[0]
-
-        else:
-            print('unable to connect to database')
-            raise()
-
 
 class PictureDb:
     table_pictures = 'pictures'
@@ -120,7 +111,7 @@ class PictureDb:
 
     @classmethod
     @DbUtils.connect
-    def load_picture_meta(cls, _id: int, *args):
+    def load_picture_meta(cls, _id: int, cursor):
         ''' load picture meta data from the database
             :arguments:
                 _id: picture id number in database: integer
@@ -130,8 +121,6 @@ class PictureDb:
                 file_meta: recordtype FilesTable
                 lat_lon_str: string
         '''
-        cursor = DbUtils().get_cursor(args)
-
         sql_string = f'SELECT * FROM {cls.table_pictures} WHERE id={_id};'
         cursor.execute(sql_string)
         data_from_table_pictures = cursor.fetchone()
