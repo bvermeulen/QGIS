@@ -21,13 +21,12 @@
  *                                                                         *
  ***************************************************************************/
 """
-
 import os
 
-from qgis.PyQt import uic, QtWidgets, QtGui
-# from qgis.PyQt import QtWidgets, QtGui
+from qgis.PyQt import uic, QtWidgets
 
-# This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
+# This loads your .ui file so that PyQt can populate your plugin with the elements
+# from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'picture_select_dlg.ui'))
 

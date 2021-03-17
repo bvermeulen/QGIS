@@ -24,6 +24,7 @@
 import os
 
 # if using Linux then add a path to the site-packages
+#pylint: disable=wrong-import-position
 if os.name == 'posix':
     import sys
     import_path = os.path.expanduser(
