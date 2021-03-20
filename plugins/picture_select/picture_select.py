@@ -24,7 +24,6 @@
 import os
 
 # if using Linux then add a path to the site-packages
-#pylint: disable=wrong-import-position
 if os.name == 'posix':
     import sys
     import_path = os.path.expanduser(
@@ -62,10 +61,14 @@ class SelectRectanglePicLayer:
             QgsCoordinateReferenceSystem('EPSG:4326'),
             QgsProject.instance().transformContext()
         )
-        years = tuple(year for year, val in years_selected.items() if val)
-        # add dummy year, yeare to sure tuple has a minimum length 2
+        # make subselection of years; add dummy year 9999, 9999 to make sure tuple has
+        # a minimum length 2; if year 2010 is true then select all years less than 2011
+        years = tuple(
+            year for year, val in years_selected.items() if val and year != 2010)
         years = years + (9999, 9999)
         select_year = f'"year" in {years}'
+        if years_selected[2010]:
+            select_year += ' or "year" < 2011'
         self.layer.setSubsetString(select_year)
 
     def select_pics_in_rectangle(self, start_point, end_point):
