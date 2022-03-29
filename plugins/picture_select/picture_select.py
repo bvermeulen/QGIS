@@ -48,9 +48,9 @@ from .pyqt_picture import Mode, PictureShow
 from .resources import qInitResources
 qInitResources()
 
-from .picture_select_dlg import PictureSelectDialog
+from .picture_select_dlg import PictureSelectDialog, START_YEAR, END_YEAR
 
-year_range = range(2010, 2022)
+year_range = range(START_YEAR, END_YEAR + 1)
 
 class SelectRectanglePicLayer:
     def __init__(self, years_selected):

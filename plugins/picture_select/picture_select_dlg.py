@@ -30,19 +30,21 @@ from qgis.PyQt import uic, QtWidgets
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'picture_select_dlg.ui'))
 
-years_range = range(2010, 2022)
+START_YEAR = 2010
+END_YEAR = 2023
 
 class PictureSelectDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super(PictureSelectDialog, self).__init__(parent)
+        self.years_range = range(START_YEAR, END_YEAR + 1)
         self.setupUi(self)
         self.pb_select_all.clicked.connect(self.select_all)
         self.pb_deselect_all.clicked.connect(self.deselect_all)
 
     def select_all(self):
-        for year in years_range:
+        for year in self.years_range:
             getattr(self, f'cb_{year}').setChecked(True)
 
     def deselect_all(self):
-        for year in years_range:
+        for year in self.years_range:
             getattr(self, f'cb_{year}').setChecked(False)
