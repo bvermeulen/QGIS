@@ -1,10 +1,39 @@
 import io
+import datetime
+from dataclasses import dataclass
 from functools import wraps
 from PIL import Image
-from recordtype import recordtype
 from decouple import config
 import psycopg2
 
+
+@dataclass
+class PicturesTable:
+    id: int
+    date_picture: datetime.datetime
+    md5_signature: str
+    camera_make: str
+    camera_model: str
+    gps_latitude: dict
+    gps_longitude: dict
+    gps_altitude: dict
+    gps_img_direction: dict
+    thumbnail: str
+    exif: dict
+    rotate: int
+    rotate_checked: bool
+
+
+@dataclass
+class FilesTable:
+    id: int
+    picture_id: int
+    file_path: str
+    file_name: str
+    file_modified: datetime.datetime
+    file_created: datetime.datetime
+    file_size: int
+    file_checked: bool
 
 class Exif:
     ''' utility methods to handle picture exif
@@ -99,16 +128,6 @@ class PictureDb:
     table_pictures = 'pictures'
     table_files = 'files'
 
-    PicturesTable = recordtype('PicturesTable',
-                               'id, date_picture, md5_signature, camera_make, '
-                               'camera_model, gps_latitude, gps_longitude, '
-                               'gps_altitude, gps_img_direction, thumbnail, exif, '
-                               'rotate, rotate_checked')
-
-    FilesTable = recordtype('FilesTable',
-                            'id, picture_id, file_path, file_name, file_modified, '
-                            'file_created, file_size, file_checked')
-
     @classmethod
     @DbUtils.connect
     def load_picture_meta(cls, _id: int, cursor):
@@ -134,7 +153,7 @@ class PictureDb:
             if not data_from_table_files:
                 return None, None, None, None
 
-        pic_meta = cls.PicturesTable(
+        pic_meta = PicturesTable(
             id=data_from_table_pictures[0],
             date_picture=data_from_table_pictures[1],
             md5_signature=data_from_table_pictures[2],
@@ -150,7 +169,7 @@ class PictureDb:
             rotate_checked=data_from_table_pictures[12],
         )
 
-        file_meta = cls.FilesTable(
+        file_meta = FilesTable(
             id=data_from_table_files[0],
             picture_id=data_from_table_files[1],
             file_path=data_from_table_files[2],
