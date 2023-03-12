@@ -104,7 +104,7 @@ class ActiveSpreadMapTool(QgsMapToolEmitPoint):
         self.marker = None
 
     def create_spread(self):
-        self.rubber_band = QgsRubberBand(self.canvas, True)
+        self.rubber_band = QgsRubberBand(self.canvas)
         self.rubber_band.setColor(Qt.blue)
         self.rubber_band.setFillColor(Qt.transparent)
         self.rubber_band.setWidth(2)
@@ -120,7 +120,7 @@ class ActiveSpreadMapTool(QgsMapToolEmitPoint):
     def reset(self):
         self.canvas.scene().removeItem(self.marker)
         self.canvas.scene().removeItem(self.rubber_band)
-        #self.rubber_band.reset(True)
+        # self.rubber_band.reset()
 
     def canvasPressEvent(self, e):
         point = self.toMapCoordinates(e.pos())

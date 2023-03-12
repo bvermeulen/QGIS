@@ -104,7 +104,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
         self.select_rect_pic = SelectRectanglePicLayer(years_selected)
 
-        self.rubberBand = QgsRubberBand(self.canvas, True)
+        self.rubberBand = QgsRubberBand(self.canvas)
         self.rubberBand.setColor(Qt.blue)
         self.rubberBand.setFillColor(Qt.transparent)
         self.rubberBand.setWidth(2)
@@ -116,7 +116,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
-        self.rubberBand.reset(True)
+        self.rubberBand.reset()
         self.pic_id = None
         self.canvas.scene().removeItem(self.marker)
 
