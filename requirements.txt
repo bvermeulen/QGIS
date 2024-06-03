@@ -1,0 +1,8 @@
+attrs
+certifi
+ExifRead
+MarkupSafe
+matplotlib
+pillow
+psycopg2
+PyQt6

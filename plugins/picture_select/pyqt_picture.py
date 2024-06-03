@@ -1,12 +1,11 @@
 import io
 from enum import Enum
 from PIL import Image
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
-    QShortcut
 )
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QImage, QPixmap, QShortcut
 from .picture_db import PictureDb
 
 anticlockwise_symbol = '\u21b6'
@@ -77,7 +76,7 @@ class PictureShow(QWidget):
         self.pic_lbl = QLabel()
         hbox_pic_text.addWidget(self.pic_lbl)
         self.text_lbl = QLabel()
-        self.text_lbl.setAlignment(Qt.AlignTop)
+        self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignTop)
         hbox_pic_text.addWidget(self.text_lbl)
 
         hbox_buttons = QHBoxLayout()
@@ -95,8 +94,7 @@ class PictureShow(QWidget):
         clockwise_button.clicked.connect(self.rotate_clockwise)
         anticlockwise_button = QPushButton(anticlockwise_symbol)
         anticlockwise_button.clicked.connect(self.rotate_anticlockwise)
-
-        hbox_buttons.setAlignment(Qt.AlignLeft)
+        hbox_buttons.setAlignment(Qt.AlignmentFlag.AlignLeft)
         hbox_buttons.addWidget(anticlockwise_button)
         hbox_buttons.addWidget(clockwise_button)
         if self.mode == Mode.Multi:
@@ -111,10 +109,10 @@ class PictureShow(QWidget):
         self.setLayout(vbox)
 
         if self.mode == Mode.Multi:
-            QShortcut(Qt.Key_Left, self, self.cntr_prev)
-            QShortcut(Qt.Key_Right, self, self.cntr_next)
-        #QShortcut(Qt.Key_S, self, self.cntr_save)
-        QShortcut(Qt.Key_Space, self, self.rotate_clockwise)
+            QShortcut(Qt.Key.Key_Left, self, self.cntr_prev)
+            QShortcut(Qt.Key.Key_Right, self, self.cntr_next)
+        #QShortcut(Qt.Key.Key_S, self, self.cntr_save)
+        QShortcut(Qt.Key.Key_Space, self, self.rotate_clockwise)
 
         self.move(400, 300)
         self.setWindowTitle('Picture ... ')
