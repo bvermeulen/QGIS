@@ -31,7 +31,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'picture_select_dlg.ui'))
 
 START_YEAR = 2010
-END_YEAR = 2023
+END_YEAR = 2025
 
 class PictureSelectDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
