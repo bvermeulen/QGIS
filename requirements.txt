@@ -1,8 +1,8 @@
-attrs
-certifi
-ExifRead
-MarkupSafe
-matplotlib
-pillow
-psycopg2
-PyQt6
+# additional dependencies for QGIS 3.36
+# create the site-packages in the virtual environment and
+# copy the folder site-packages to ~/.local/share/QGIS/QGIS3/profiles/default/python
+#
+ExifRead==3.0.0
+packaging==24.0
+pillow==10.3.0
+python-decouple==3.8
