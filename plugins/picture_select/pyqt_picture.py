@@ -1,18 +1,23 @@
 import io
 from enum import Enum
 from PIL import Image
-from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
-    QShortcut
+from qgis.PyQt.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLabel,
+    QPushButton,
+    QShortcut,
 )
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap
+from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtGui import QImage, QPixmap
+
 from .picture_db import PictureDb
 
-anticlockwise_symbol = '\u21b6'
-clockwise_symbol = '\u21b7'
-right_arrow_symbol = '\u25B6'
-left_arrow_symbol = '\u25C0'
+anticlockwise_symbol = "\u21b6"
+clockwise_symbol = "\u21b7"
+right_arrow_symbol = "\u25B6"
+left_arrow_symbol = "\u25C0"
 
 
 class Mode(Enum):
@@ -22,12 +27,11 @@ class Mode(Enum):
 
 def pil2pixmap(pil_image):
     bytes_img = io.BytesIO()
-    pil_image.save(bytes_img, format='JPEG')
-
+    pil_image.save(bytes_img, format="JPEG")
     qimg = QImage()
     qimg.loadFromData(bytes_img.getvalue())
-
     return QPixmap.fromImage(qimg)
+
 
 def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
     try:
@@ -37,22 +41,22 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
         _date_pic = None
 
     text = (
-        f'id: {pic_meta.id:6}\n'
-        f'file name: {file_meta.file_name}\n'
-        f'file path: {file_meta.file_path}\n'
+        f"id: {pic_meta.id:6}\n"
+        f"file name: {file_meta.file_name}\n"
+        f"file path: {file_meta.file_path}\n"
         f'file modified: {file_meta.file_modified.strftime("%d-%b-%Y %H:%M:%S")}\n'
-        f'date picture: {_date_pic}\n'
-        f'md5: {pic_meta.md5_signature}\n'
-        f'camera make: {pic_meta.camera_make}\n'
-        f'camera model: {pic_meta.camera_model}\n'
-        f'location: {lat_lon_str}\n'
-        f'file check: {file_meta.file_checked}\n'
-        f'rotate: {pic_meta.rotate:3}\n'
-        f'rotate_check: {pic_meta.rotate_checked}'
+        f"date picture: {_date_pic}\n"
+        f"md5: {pic_meta.md5_signature}\n"
+        f"camera make: {pic_meta.camera_make}\n"
+        f"camera model: {pic_meta.camera_model}\n"
+        f"location: {lat_lon_str}\n"
+        f"file check: {file_meta.file_checked}\n"
+        f"rotate: {pic_meta.rotate:3}\n"
+        f"rotate_check: {pic_meta.rotate_checked}"
     )
 
     if index is not None:
-        text += f'\nindex: {index+1} of {total}'
+        text += f"\nindex: {index+1} of {total}"
 
     return text
 
@@ -81,15 +85,15 @@ class PictureShow(QWidget):
         hbox_pic_text.addWidget(self.text_lbl)
 
         hbox_buttons = QHBoxLayout()
-        #quit_button = QPushButton('Quit')
-        #quit_button.clicked.connect(self.cntr_quit)
+        # quit_button = QPushButton('Quit')
+        # quit_button.clicked.connect(self.cntr_quit)
         if self.mode == Mode.Multi:
             prev_button = QPushButton(left_arrow_symbol)
             prev_button.clicked.connect(self.cntr_prev)
             next_button = QPushButton(right_arrow_symbol)
             next_button.clicked.connect(self.cntr_next)
-        #save_button = QPushButton('save')
-        #save_button.clicked.connect(self.cntr_save)
+        # save_button = QPushButton('save')
+        # save_button.clicked.connect(self.cntr_save)
 
         clockwise_button = QPushButton(clockwise_symbol)
         clockwise_button.clicked.connect(self.rotate_clockwise)
@@ -102,8 +106,8 @@ class PictureShow(QWidget):
         if self.mode == Mode.Multi:
             hbox_buttons.addWidget(prev_button)
             hbox_buttons.addWidget(next_button)
-            #hbox_buttons.addWidget(save_button)
-            #hbox_buttons.addWidget(quit_button)
+            # hbox_buttons.addWidget(save_button)
+            # hbox_buttons.addWidget(quit_button)
 
         vbox.addLayout(hbox_pic_text)
         vbox.addLayout(hbox_buttons)
@@ -113,11 +117,11 @@ class PictureShow(QWidget):
         if self.mode == Mode.Multi:
             QShortcut(Qt.Key_Left, self, self.cntr_prev)
             QShortcut(Qt.Key_Right, self, self.cntr_next)
-        #QShortcut(Qt.Key_S, self, self.cntr_save)
+        # QShortcut(Qt.Key_S, self, self.cntr_save)
         QShortcut(Qt.Key_Space, self, self.rotate_clockwise)
 
         self.move(400, 300)
-        self.setWindowTitle('Picture ... ')
+        self.setWindowTitle("Picture ... ")
         self.show()
 
     def show_picture(self):
@@ -125,8 +129,11 @@ class PictureShow(QWidget):
         self.pic_lbl.setPixmap(pixmap)
 
         self.text = meta_to_text(
-            self.pic_meta, self.file_meta, self.lat_lon_str,
-            index=self.index, total=len(self.id_list)
+            self.pic_meta,
+            self.file_meta,
+            self.lat_lon_str,
+            index=self.index,
+            total=len(self.id_list),
         )
         self.text_lbl.setText(self.text)
 
@@ -149,9 +156,12 @@ class PictureShow(QWidget):
             self.show_picture()
 
     def cntr_select_pic(self, picture_id):
-        self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
-            self.picdb.load_picture_meta(picture_id))
-
+        (
+            self.image,
+            self.pic_meta,
+            self.file_meta,
+            self.lat_lon_str,
+        ) = self.picdb.load_picture_meta(picture_id)
         if self.pic_meta:
             self.selected_id_changed.emit(picture_id)
             self.rotate = self.pic_meta.rotate
@@ -162,8 +172,12 @@ class PictureShow(QWidget):
         if self.index < 0:
             self.index = len(self.id_list) - 1
 
-        self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
-            self.picdb.load_picture_meta(self.id_list[self.index]))
+        (
+            self.image,
+            self.pic_meta,
+            self.file_meta,
+            self.lat_lon_str,
+        ) = self.picdb.load_picture_meta(self.id_list[self.index])
         if self.pic_meta:
             self.selected_id_changed.emit(self.id_list[self.index])
             self.rotate = self.pic_meta.rotate
@@ -174,8 +188,12 @@ class PictureShow(QWidget):
         if self.index > len(self.id_list) - 1:
             self.index = 0
 
-        self.image, self.pic_meta, self.file_meta, self.lat_lon_str = (
-            self.picdb.load_picture_meta(self.id_list[self.index]))
+        (
+            self.image,
+            self.pic_meta,
+            self.file_meta,
+            self.lat_lon_str,
+        ) = self.picdb.load_picture_meta(self.id_list[self.index])
         if self.pic_meta:
             self.selected_id_changed.emit(self.id_list[self.index])
             self.rotate = self.pic_meta.rotate
@@ -188,7 +206,8 @@ class PictureShow(QWidget):
 
     def cntr_save(self):
         self.picdb.update_thumbnail_image(
-            self.id_list[self.index], self.image, self.rotate)
+            self.id_list[self.index], self.image, self.rotate
+        )
 
     def cntr_quit(self):
         self.close()

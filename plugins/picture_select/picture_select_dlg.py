@@ -8,8 +8,8 @@
                              -------------------
         begin                : 2020-09-29
         git sha              : $Format:%H$
-        copyright            : (C) 2020 by Bruno Vermeulen
-        email                : bruno_vermeulen2001@yahoo.com
+        copyright            : (C) 2020 - 2024 by Bruno Vermeulen
+        email                : bruno.vermeulen@.com
  ***************************************************************************/
 
 /***************************************************************************
@@ -21,17 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os
-
+from pathlib import Path
 from qgis.PyQt import uic, QtWidgets
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements
 # from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'picture_select_dlg.ui'))
+FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "picture_select_dlg.ui")
 
 START_YEAR = 2010
 END_YEAR = 2025
+GEO_ITEMS = {
+    "countries": ["countries"],
+    "states": ["states", "provinces"],
+    "cities": ["cities", "municipalities"],
+    "roads": ["roads"],
+}
+
 
 class PictureSelectDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
@@ -43,8 +48,8 @@ class PictureSelectDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def select_all(self):
         for year in self.years_range:
-            getattr(self, f'cb_{year}').setChecked(True)
+            getattr(self, f"cb_{year}").setChecked(True)
 
     def deselect_all(self):
         for year in self.years_range:
-            getattr(self, f'cb_{year}').setChecked(False)
+            getattr(self, f"cb_{year}").setChecked(False)

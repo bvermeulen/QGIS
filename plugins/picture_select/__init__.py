@@ -22,6 +22,27 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
+from pathlib import Path
+import os
+import sys
+
+# add path to required site-packages not available in QGIS depending on OS
+if os.name == "posix":
+    import_path = Path(
+        "~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
+    )
+
+elif os.name == "nt":
+    import_path = (
+        Path(os.getenv("APPDATA")) / "QGIS/QGIS3/profiles/default/python/site-packages"
+    )
+
+else:
+    import_path = ""
+
+import_path = str(import_path)
+if import_path and import_path not in sys.path:
+    sys.path.insert(0, import_path)
 
 
 # noinspection PyPep8Naming
@@ -31,6 +52,6 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface
     """
-    #
     from .picture_select import PictureSelect
+
     return PictureSelect(iface)

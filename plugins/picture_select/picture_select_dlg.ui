@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>308</height>
+    <width>304</width>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
+  <widget class="QDialogButtonBox" name="ok_cancel">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>260</y>
-     <width>211</width>
+     <x>10</x>
+     <y>420</y>
+     <width>161</width>
      <height>32</height>
     </rect>
    </property>
@@ -32,8 +32,8 @@
   <widget class="QCheckBox" name="cb_2010">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>60</y>
+     <x>10</x>
+     <y>50</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -45,8 +45,8 @@
   <widget class="QCheckBox" name="cb_2011">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>90</y>
+     <x>10</x>
+     <y>80</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -58,8 +58,8 @@
   <widget class="QCheckBox" name="cb_2012">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>120</y>
+     <x>10</x>
+     <y>110</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -71,8 +71,8 @@
   <widget class="QCheckBox" name="cb_2013">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>150</y>
+     <x>10</x>
+     <y>140</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -84,8 +84,8 @@
   <widget class="QCheckBox" name="cb_2014">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>180</y>
+     <x>10</x>
+     <y>170</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -97,8 +97,8 @@
   <widget class="QCheckBox" name="cb_2015">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>210</y>
+     <x>10</x>
+     <y>200</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -110,8 +110,8 @@
   <widget class="QCheckBox" name="cb_2016">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>60</y>
+     <x>80</x>
+     <y>50</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -123,8 +123,8 @@
   <widget class="QCheckBox" name="cb_2017">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>90</y>
+     <x>80</x>
+     <y>80</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -136,8 +136,8 @@
   <widget class="QCheckBox" name="cb_2018">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>120</y>
+     <x>80</x>
+     <y>110</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -149,8 +149,8 @@
   <widget class="QCheckBox" name="cb_2019">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>150</y>
+     <x>80</x>
+     <y>140</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -162,8 +162,8 @@
   <widget class="QCheckBox" name="cb_2020">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>180</y>
+     <x>80</x>
+     <y>170</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -175,8 +175,8 @@
   <widget class="QCheckBox" name="cb_2021">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>210</y>
+     <x>80</x>
+     <y>200</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -188,8 +188,8 @@
   <widget class="QCheckBox" name="cb_2022">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>60</y>
+     <x>150</x>
+     <y>50</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -201,8 +201,8 @@
   <widget class="QCheckBox" name="cb_2023">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>90</y>
+     <x>150</x>
+     <y>80</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -214,8 +214,8 @@
   <widget class="QCheckBox" name="cb_2024">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>120</y>
+     <x>150</x>
+     <y>110</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -227,8 +227,8 @@
   <widget class="QCheckBox" name="cb_2025">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>150</y>
+     <x>150</x>
+     <y>140</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -237,10 +237,10 @@
     <string>2025</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="label_select_years">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>10</y>
      <width>131</width>
      <height>31</height>
@@ -253,8 +253,8 @@
   <widget class="QPushButton" name="pb_deselect_all">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>90</y>
+     <x>210</x>
+     <y>80</y>
      <width>71</width>
      <height>28</height>
     </rect>
@@ -266,8 +266,8 @@
   <widget class="QPushButton" name="pb_select_all">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>60</y>
+     <x>210</x>
+     <y>50</y>
      <width>71</width>
      <height>28</height>
     </rect>
@@ -276,11 +276,148 @@
     <string>Select all</string>
    </property>
   </widget>
+  <widget class="QLabel" name="label_filter_location_info">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>240</y>
+     <width>151</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Filter location info ...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_countries">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>280</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="Line" name="line_1">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>220</y>
+     <width>321</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_2">
+   <property name="geometry">
+    <rect>
+     <x>-10</x>
+     <y>400</y>
+     <width>321</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_countries">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>280</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Countries</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_states">
+   <property name="geometry">
+    <rect>
+     <x>8</x>
+     <y>310</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>States</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_states">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>310</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_cities">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>340</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_cities">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>340</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cities</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_roads">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>370</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_roads">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>370</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Roads</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>ok_cancel</sender>
    <signal>accepted()</signal>
    <receiver>Dialog</receiver>
    <slot>accept()</slot>
@@ -296,7 +433,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>ok_cancel</sender>
    <signal>rejected()</signal>
    <receiver>Dialog</receiver>
    <slot>reject()</slot>
