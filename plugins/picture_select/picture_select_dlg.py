@@ -33,7 +33,7 @@ END_YEAR = 2025
 GEO_ITEMS = {
     "countries": ["countries"],
     "states": ["states", "provinces"],
-    "cities": ["cities", "municipalities"],
+    "cities": ["cities", "municipalities", "towns", "villages"],
     "roads": ["roads"],
 }
 

@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2020-09-14
         git sha              : $Format:%H$
-        copyright            : (C) 2020 by Bruno Vermeulen
+        copyright            : (C) 2020 - 2024 by Bruno Vermeulen
         email                : bruno.vermeulen@hotmail.com
  ***************************************************************************/
 
@@ -81,13 +81,10 @@ class SelectFilterPictureLayer:
             pattern = "|".join(c.strip() for c in geo_info[geo_key].split(","))
             if not pattern:
                 continue
-            if len(subkeys) == 1:
-                query_str += f" and {subkeys[0]} ~* '{pattern}'"
-            else:
-                query_str += (
-                    f" and ({subkeys[0]} ~* '{pattern}' or {subkeys[1]} ~* '{pattern}')"
-                )
-
+            query_str += f" and ({subkeys[0]} ~* '{pattern}'"
+            for subkey in subkeys[1:]:
+                query_str += f" or {subkey} ~* '{pattern}'"
+            query_str += ")"
         return query_str
 
     def select_pics_in_rectangle(self, start_point, end_point):
@@ -155,7 +152,6 @@ class SelectMapTool(QgsMapToolEmitPoint):
         pic_ids = self.filtered_pic_layer.select_pics_in_rectangle(
             self.start_point, self.end_point
         )
-
         if pic_ids:
             self.pic_show = PictureShow(mode=Mode.Multi)
             self.pic_show.selected_id_changed.connect(self.show_marker)
@@ -199,8 +195,9 @@ class SelectMapTool(QgsMapToolEmitPoint):
 class PictureSelect:
     def __init__(self, iface):
         self.iface = iface
-        self.actions = []
+        self.canvas = self.iface.mapCanvas()
         self.menu = self.tr("&Picture Select")
+        self.action = None
         self.first_start = None
         self.select_pic = None
         self.years_selection = {year: True for year in year_range}
@@ -208,68 +205,26 @@ class PictureSelect:
 
     def initGui(self):
         icon_path = str(Path(__file__).parent / "icon.png")
-        self.add_action(
-            icon_path,
-            text=self.tr("Picture Select"),
-            callback=self.run,
-            parent=self.iface.mainWindow(),
+        self.action = QAction(
+            QIcon(icon_path), self.tr("Picture Select"), self.iface.mainWindow()
         )
-
+        self.action.triggered.connect(self.run)
+        self.action.setEnabled(True)
+        self.action.setCheckable(True)
+        self.action.setStatusTip("Select pictures ...")
+        self.iface.addToolBarIcon(self.action)
+        self.iface.addPluginToMenu(self.menu, self.action)
         self.first_start = True
 
     def tr(self, message):
         return QCoreApplication.translate("PictureSelect", message)
 
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        checkable=True,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None,
-    ):
-        icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
-        action.triggered.connect(callback)
-        action.setEnabled(enabled_flag)
-
-        if checkable:
-            action.setCheckable(True)
-
-        if status_tip is not None:
-            action.setStatusTip(status_tip)
-
-        if whats_this is not None:
-            action.setWhatsThis(whats_this)
-
-        if add_to_toolbar:
-            self.iface.addToolBarIcon(action)
-
-        if add_to_menu:
-            self.iface.addPluginToMenu(self.menu, action)
-
-        self.actions.append(action)
-
-        return action
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-        for action in self.actions:
-            self.iface.removePluginMenu(self.tr("&Picture Select"), action)
-            self.iface.removeToolBarIcon(action)
+        self.iface.removePluginMenu(self.tr("&Picture Select"), self.action)
+        self.iface.removeToolBarIcon(self.action)
 
     def run(self):
-        try:
-            self.select_pic.deactivate()
-
-        except AttributeError:
-            pass
-
         result = False
         if self.first_start:
             self.first_start = False
@@ -280,20 +235,24 @@ class PictureSelect:
                 getattr(dlg, f"le_{geo_item}").setText(val)
             dlg.show()
             result = dlg.exec_()
+            dlg.close()
 
         if result:
             for year in self.years_selection:
                 self.years_selection[year] = getattr(dlg, f"cb_{year}").isChecked()
             for geo_item in GEO_ITEMS:
                 self.geo_info[geo_item] = getattr(dlg, f"le_{geo_item}").text()
-            dlg.close()
 
-        if self.actions[0].isChecked():
-            canvas = self.iface.mapCanvas()
-            self.select_pic = SelectMapTool(canvas, self.years_selection, self.geo_info)
-            canvas.setMapTool(self.select_pic)
+        if self.action.isChecked():
+            self.select_pic = SelectMapTool(
+                self.canvas, self.years_selection, self.geo_info
+            )
+            self.canvas.setMapTool(self.select_pic)
 
         else:
-            self.select_pic.deactivate()
-            self.iface.mapCanvas().unsetMapTool(self.select_pic)
+            try:
+                self.select_pic.deactivate()
+            except AttributeError:
+                pass
+            self.canvas.unsetMapTool(self.select_pic)
             self.first_start = True

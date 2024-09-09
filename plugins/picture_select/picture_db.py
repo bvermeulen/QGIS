@@ -36,6 +36,15 @@ class FilesTable:
     file_checked: bool
 
 
+@dataclass
+class InfoTable:
+    country: str
+    state: str
+    city: str
+    suburb: str
+    road: str
+
+
 class Exif:
     """utility methods to handle picture exif"""
 
@@ -133,6 +142,7 @@ class DbUtils:
 class PictureDb:
     table_pictures = "pictures"
     table_files = "files"
+    table_locations = "locations"
 
     @classmethod
     @DbUtils.connect
@@ -142,22 +152,29 @@ class PictureDb:
             _id: picture id number in database: integer
         :returns:
             im: PIL image
-            pic_meta: recordtype PicturesTable
-            file_meta: recordtype FilesTable
+            pic_meta: PicturesTable
+            file_meta: FilesTable
+            info_meta: InfoTable
             lat_lon_str: string
         """
-        sql_string = f"SELECT * FROM {cls.table_pictures} WHERE id={_id};"
-        cursor.execute(sql_string)
+        sql_string = f"SELECT * FROM {cls.table_pictures} WHERE id=%s;"
+        cursor.execute(sql_string, (_id,))
         data_from_table_pictures = cursor.fetchone()
 
         if not data_from_table_pictures:
-            return None, None, None, None
-        else:
-            sql_string = f"SELECT * FROM {cls.table_files} WHERE picture_id={_id};"
-            cursor.execute(sql_string)
-            data_from_table_files = cursor.fetchone()
-            if not data_from_table_files:
-                return None, None, None, None
+            return None, None, None, None, None
+
+        sql_string = f"SELECT * FROM {cls.table_files} WHERE picture_id=%s;"
+        cursor.execute(sql_string, (_id,))
+        data_from_table_files = cursor.fetchone()
+        if not data_from_table_files:
+            return None, None, None, None, None
+
+        sql_string = (
+            f"SELECT geolocation_info FROM {cls.table_locations} WHERE picture_id=%s"
+        )
+        cursor.execute(sql_string, (_id,))
+        geolocation_info = cursor.fetchone()[0]
 
         pic_meta = PicturesTable(
             id=data_from_table_pictures[0],
@@ -174,7 +191,6 @@ class PictureDb:
             rotate=data_from_table_pictures[11],
             rotate_checked=data_from_table_pictures[12],
         )
-
         file_meta = FilesTable(
             id=data_from_table_files[0],
             picture_id=data_from_table_files[1],
@@ -184,6 +200,24 @@ class PictureDb:
             file_created=data_from_table_files[5],
             file_size=data_from_table_files[6],
             file_checked=data_from_table_files[7],
+        )
+        info_meta = InfoTable(
+            country=geolocation_info.get("country", ""),
+            state=", ".join(
+                v
+                for v in [geolocation_info.get(k, "") for k in ["state", "province"]]
+                if v
+            ),
+            city=", ".join(
+                v
+                for v in [
+                    geolocation_info.get(k, "")
+                    for k in ["city", "municipality", "town", "village"]
+                ]
+                if v
+            ),
+            suburb=geolocation_info.get("suburb", ""),
+            road=geolocation_info.get("road", ""),
         )
         assert (
             pic_meta.id == file_meta.picture_id
@@ -196,4 +230,4 @@ class PictureDb:
         lat_lon_str, _ = Exif().convert_gps(
             pic_meta.gps_latitude, pic_meta.gps_longitude, pic_meta.gps_altitude
         )
-        return im, pic_meta, file_meta, lat_lon_str
+        return im, pic_meta, file_meta, info_meta, lat_lon_str

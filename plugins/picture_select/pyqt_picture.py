@@ -7,10 +7,11 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QPushButton,
+    QFrame,
     QShortcut,
 )
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QImage, QPixmap
+from qgis.PyQt.QtGui import QImage, QPixmap, QPalette, QColor
 
 from .picture_db import PictureDb
 
@@ -18,11 +19,26 @@ anticlockwise_symbol = "\u21b6"
 clockwise_symbol = "\u21b7"
 right_arrow_symbol = "\u25B6"
 left_arrow_symbol = "\u25C0"
+border_style = "margin:2px; " "padding:2px 5px; " "border:1px solid black; "
 
 
 class Mode(Enum):
     Single = 1
     Multi = 2
+
+
+class QHLine(QFrame):
+    def __init__(self, color=QColor("black"), width=0):
+        super().__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(width)
+        self.setColor(color)
+
+    def setColor(self, color):
+        pal = self.palette()
+        pal.setColor(QPalette.WindowText, color)
+        self.setPalette(pal)
 
 
 def pil2pixmap(pil_image):
@@ -61,6 +77,17 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
     return text
 
 
+def info_to_text(info_meta):
+    text = (
+        f"country: {info_meta.country}\n"
+        f"state: {info_meta.state}\n"
+        f"city: {info_meta.city}\n"
+        f"suburb: {info_meta.suburb}\n"
+        f"road: {info_meta.road}"
+    )
+    return text
+
+
 class PictureShow(QWidget):
     selected_id_changed = pyqtSignal(int)
 
@@ -71,34 +98,46 @@ class PictureShow(QWidget):
 
         self.rotate = None
         self.index = None
+        self.file_meta = None
+        self.pic_meta = None
+        self.info_meta = None
         self.id_list = []
         self.initUI()
 
     def initUI(self):
-        vbox = QVBoxLayout()
+        mainbox = QVBoxLayout()
 
-        hbox_pic_text = QHBoxLayout()
+        hbox_main = QHBoxLayout()
+        vbox_picture = QVBoxLayout()
         self.pic_lbl = QLabel()
-        hbox_pic_text.addWidget(self.pic_lbl)
+        # self.pic_lbl.setStyleSheet(border_style)
+        vbox_picture.addWidget(self.pic_lbl)
+        vbox_picture.addStretch()
+        vbox_text_info = QVBoxLayout()
+        self.info_lbl = QLabel()
+        # self.info_lbl.setStyleSheet(border_style)
+        vbox_text_info.addWidget(self.info_lbl)
+        vbox_text_info.addWidget(QHLine())
         self.text_lbl = QLabel()
-        self.text_lbl.setAlignment(Qt.AlignTop)
-        hbox_pic_text.addWidget(self.text_lbl)
+        # self.text_lbl.setStyleSheet(border_style)
+        vbox_text_info.addWidget(self.text_lbl)
+        vbox_text_info.addStretch()
+        hbox_main.addLayout(vbox_picture)
+        hbox_main.addLayout(vbox_text_info)
 
         hbox_buttons = QHBoxLayout()
-        # quit_button = QPushButton('Quit')
-        # quit_button.clicked.connect(self.cntr_quit)
         if self.mode == Mode.Multi:
             prev_button = QPushButton(left_arrow_symbol)
             prev_button.clicked.connect(self.cntr_prev)
             next_button = QPushButton(right_arrow_symbol)
             next_button.clicked.connect(self.cntr_next)
-        # save_button = QPushButton('save')
-        # save_button.clicked.connect(self.cntr_save)
 
         clockwise_button = QPushButton(clockwise_symbol)
         clockwise_button.clicked.connect(self.rotate_clockwise)
         anticlockwise_button = QPushButton(anticlockwise_symbol)
         anticlockwise_button.clicked.connect(self.rotate_anticlockwise)
+        quit_button = QPushButton("Quit")
+        quit_button.clicked.connect(self.cntr_quit)
 
         hbox_buttons.setAlignment(Qt.AlignLeft)
         hbox_buttons.addWidget(anticlockwise_button)
@@ -106,18 +145,15 @@ class PictureShow(QWidget):
         if self.mode == Mode.Multi:
             hbox_buttons.addWidget(prev_button)
             hbox_buttons.addWidget(next_button)
-            # hbox_buttons.addWidget(save_button)
-            # hbox_buttons.addWidget(quit_button)
+        hbox_buttons.addWidget(quit_button)
 
-        vbox.addLayout(hbox_pic_text)
-        vbox.addLayout(hbox_buttons)
-
-        self.setLayout(vbox)
+        mainbox.addLayout(hbox_main)
+        mainbox.addLayout(hbox_buttons)
+        self.setLayout(mainbox)
 
         if self.mode == Mode.Multi:
             QShortcut(Qt.Key_Left, self, self.cntr_prev)
             QShortcut(Qt.Key_Right, self, self.cntr_next)
-        # QShortcut(Qt.Key_S, self, self.cntr_save)
         QShortcut(Qt.Key_Space, self, self.rotate_clockwise)
 
         self.move(400, 300)
@@ -128,14 +164,17 @@ class PictureShow(QWidget):
         pixmap = pil2pixmap(self.image)
         self.pic_lbl.setPixmap(pixmap)
 
-        self.text = meta_to_text(
+        meta_text = meta_to_text(
             self.pic_meta,
             self.file_meta,
             self.lat_lon_str,
             index=self.index,
             total=len(self.id_list),
         )
-        self.text_lbl.setText(self.text)
+        info_text = info_to_text(self.info_meta)
+        self.text_lbl.setText(meta_text)
+        self.info_lbl.setText(info_text)
+        self.resize(self.sizeHint())
 
     def rotate_clockwise(self):
         # note degrees are defined in counter clockwise direction !
@@ -155,11 +194,12 @@ class PictureShow(QWidget):
             self.pic_meta.rotate = self.rotate
             self.show_picture()
 
-    def cntr_select_pic(self, picture_id):
+    def select_pic(self, picture_id):
         (
             self.image,
             self.pic_meta,
             self.file_meta,
+            self.info_meta,
             self.lat_lon_str,
         ) = self.picdb.load_picture_meta(picture_id)
         if self.pic_meta:
@@ -171,43 +211,18 @@ class PictureShow(QWidget):
         self.index -= 1
         if self.index < 0:
             self.index = len(self.id_list) - 1
-
-        (
-            self.image,
-            self.pic_meta,
-            self.file_meta,
-            self.lat_lon_str,
-        ) = self.picdb.load_picture_meta(self.id_list[self.index])
-        if self.pic_meta:
-            self.selected_id_changed.emit(self.id_list[self.index])
-            self.rotate = self.pic_meta.rotate
-            self.show_picture()
+        self.select_pic(self.id_list[self.index])
 
     def cntr_next(self):
         self.index += 1
         if self.index > len(self.id_list) - 1:
             self.index = 0
-
-        (
-            self.image,
-            self.pic_meta,
-            self.file_meta,
-            self.lat_lon_str,
-        ) = self.picdb.load_picture_meta(self.id_list[self.index])
-        if self.pic_meta:
-            self.selected_id_changed.emit(self.id_list[self.index])
-            self.rotate = self.pic_meta.rotate
-            self.show_picture()
+        self.select_pic(self.id_list[self.index])
 
     def call_by_list(self, id_list):
         self.id_list = id_list
         self.index = 0
-        self.cntr_select_pic(self.id_list[self.index])
-
-    def cntr_save(self):
-        self.picdb.update_thumbnail_image(
-            self.id_list[self.index], self.image, self.rotate
-        )
+        self.select_pic(self.id_list[self.index])
 
     def cntr_quit(self):
         self.close()
