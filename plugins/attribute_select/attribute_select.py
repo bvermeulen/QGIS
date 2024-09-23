@@ -65,8 +65,8 @@ class MapTool(QgsMapToolEmitPoint):
         self.reset()
 
     def reset(self):
-        self.startPoint = None
-        self.endPoint = None
+        self.start_point = None
+        self.end_point = None
         self.start_date = None
         self.end_date = None
         self.isEmittingPoint = False
@@ -98,10 +98,6 @@ class MapTool(QgsMapToolEmitPoint):
             dialog_data.start_date == dialog_data.end_date
         ):
             print("remove date plot")
-            self.start_date = None
-            self.end_date = None
-            self.start_point = None
-            self.end_point = None
             self.reset()
 
         elif (self.start_date and self.end_date) and (self.start_date < self.end_date):
