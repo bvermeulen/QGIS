@@ -100,6 +100,8 @@ class MapTool(QgsMapToolEmitPoint):
             print("remove date plot")
             self.start_date = None
             self.end_date = None
+            self.start_point = None
+            self.end_point = None
             self.reset()
 
         elif (self.start_date and self.end_date) and (self.start_date < self.end_date):
