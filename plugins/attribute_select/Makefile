@@ -44,7 +44,7 @@ PY_FILES = __init__.py attribute_select.py
 
 UI_FILES =
 
-EXTRAS = metadata.txt icon.png
+EXTRAS = metadata.txt icon_select_attribute.png
 
 EXTRA_DIRS =
 

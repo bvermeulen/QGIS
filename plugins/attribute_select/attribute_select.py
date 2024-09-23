@@ -184,7 +184,7 @@ class AttributeSelect:
         self.dlg = None
 
     def initGui(self):
-        icon_path = str(Path(__file__).parent / "icon.png")
+        icon_path = str(Path(__file__).parent / "icon_select_attribute.png")
         self.action = QAction(
             QIcon(icon_path), self.tr("Attribute Select"), self.iface.mainWindow()
         )
