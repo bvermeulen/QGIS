@@ -70,7 +70,6 @@ def meta_to_text(pic_meta, file_meta, lat_lon_str, index=None, total=None):
         f"rotate: {pic_meta.rotate:3}\n"
         f"rotate_check: {pic_meta.rotate_checked}"
     )
-
     if index is not None:
         text += f"\nindex: {index+1} of {total}"
 
