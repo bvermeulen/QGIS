@@ -139,6 +139,11 @@
    </item>
    <item>
     <property name="text">
+     <string>elevation</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>fleet</string>
     </property>
    </item>

@@ -41,7 +41,8 @@ class AttrChoice(Enum):
     avg_distortion = 1
     avg_stiffness = 2
     avg_viscosity = 3
-    fleet = 4
+    elevation = 4
+    fleet = 5
 
 
 @dataclass
@@ -78,6 +79,8 @@ class AttributeDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.dlg_data.attribute = AttrChoice.avg_stiffness
             case "viscosity":
                 self.dlg_data.attribute = AttrChoice.avg_viscosity
+            case "elevation":
+                self.dlg_data.attribute = AttrChoice.elevation
             case _:
                 self.dlg_data.attribute = AttrChoice.avg_distortion
 

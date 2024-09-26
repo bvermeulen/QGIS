@@ -43,6 +43,7 @@ styles = {
     AttrChoice.avg_distortion: r"D:/OneDrive/Work/PDO/QGIS shared/styles/avg_distortion.qml",
     AttrChoice.avg_stiffness: r"D:/OneDrive/Work/PDO/QGIS shared/styles/avg_stiffness.qml",
     AttrChoice.avg_viscosity: r"D:/OneDrive/Work/PDO/QGIS shared/styles/avg_viscosity.qml",
+    AttrChoice.elevation: r"D:/OneDrive/Work/PDO/QGIS shared/styles/elevation.qml",
     AttrChoice.fleet: r"D:/OneDrive/Work/PDO/QGIS shared/styles/fleet.qml",
 }
 
@@ -214,11 +215,10 @@ class AttributeSelect:
             self.map_tool = MapTool(self.canvas, self.layer)
             self.canvas.setMapTool(self.map_tool)
 
-        else:
-            if self.layer:
-                self.map_tool.deactivate()
-                self.canvas.unsetMapTool(self.map_tool)
-                self.layer = None
-                self.map_tool = None
-                self.dlg.done(0)
-                self.dlg = None
+        elif self.layer:
+            self.map_tool.deactivate()
+            self.canvas.unsetMapTool(self.map_tool)
+            self.layer = None
+            self.map_tool = None
+            self.dlg.done(0)
+            self.dlg = None
