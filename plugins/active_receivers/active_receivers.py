@@ -23,44 +23,74 @@
 """
 import os
 import numpy as np
-if os.name == 'posix':
+
+if os.name == "posix":
     import sys
+
     import_path = os.path.expanduser(
-        '~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages')
+        "~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
+    )
     sys.path.insert(0, import_path)
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from qgis.core import QgsPoint, QgsPointXY, QgsWkbTypes
+from qgis.core import (
+    QgsProject,
+    QgsPoint,
+    QgsPointXY,
+    QgsWkbTypes,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsGeometry,
+)
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsVertexMarker
 
 from .resources import qInitResources
+
 qInitResources()
 
 from .active_receivers_dialog import ActiveReceiversDialog
 
-AZIMUTH = 0.0            # degrees [0 .. 360]
-OFFSET_INLINE = 1000     # meters
-OFFSET_CROSSLINE = 500   # meters
+AZIMUTH = 0.0  # degrees [0 .. 360]
+OFFSET_INLINE = 1000  # meters
+OFFSET_CROSSLINE = 500  # meters
 
 
 class CalcMap:
 
-    def __init__(self, azimuth, inline, crossline):
-        self.azimuth = (np.pi / 180 * azimuth)  # converted to radians
+    def __init__(self, canvas, azimuth, inline, crossline):
+        self.canvas = canvas
+        self.azimuth = np.pi / 180 * azimuth  # converted to radians
         self.inline_offset = inline
         self.crossline_offset = crossline
 
+    @staticmethod
+    def lonlat2utm_epsg(longitude: float, latitude: float) -> str:
+        zone = f"{(int((longitude + 180) / 6) % 60) + 1:02}"
+        if latitude >= 0.0:
+            return "".join(["EPSG:326", zone])
+
+        else:
+            return "".join(["EPSG:327", zone])
+
+    @staticmethod
+    def transform_point(tr, x, y):
+        geom = QgsGeometry(QgsPoint(x, y))
+        geom.transform(tr)
+        x = geom.asPoint().x()
+        y = geom.asPoint().y()
+        return x, y
+
     def offset_transformation(self, inline_offset, crossline_offset):
-        '''  transformation from inline_offset, crossline offset to delta_easting,
+        """transformation from inline_offset, crossline offset to delta_easting,
              delta_northing. self.azimuth angle of prospect in degrees
 
         :Returns:
             :dx: (m) change in x direction (float)
             :dy: (m) change in y direction (float)
-        '''
+        """
         dx_crossline = crossline_offset * np.cos(self.azimuth)
         dy_crossline = -crossline_offset * np.sin(self.azimuth)
         dx_inline = -inline_offset * np.sin(self.azimuth)
@@ -68,43 +98,106 @@ class CalcMap:
 
         return dx_inline + dx_crossline, dy_inline + dy_crossline
 
-    def add_patch(self, x, y):
-        ''' create 4 corner coordinates based inline and crossline distance
-        '''
-        p1 = tuple([x + self.offset_transformation(
-            self.inline_offset, self.crossline_offset)[0],
-                    y + self.offset_transformation(
-            self.inline_offset, self.crossline_offset)[1]])
+    def add_patch(self, x: float, y: float) -> tuple[QgsPointXY]:
+        """create 4 corner coordinates based on inline and crossline distances"""
+        csr_canvas = QgsCoordinateReferenceSystem(
+            self.canvas.mapSettings().destinationCrs().authid()
+        )
+        geodetic = False
+        if csr_canvas.isGeographic():
+            geodetic = True
+            csr_utm = QgsCoordinateReferenceSystem(self.lonlat2utm_epsg(x, y))
+            tr = QgsCoordinateTransform(
+                csr_canvas,
+                csr_utm,
+                QgsProject.instance(),
+            )
+            back_tr = QgsCoordinateTransform(
+                csr_utm,
+                csr_canvas,
+                QgsProject.instance(),
+            )
+            x, y = self.transform_point(tr, x, y)
 
-        p2=tuple([x + self.offset_transformation(
-            self.inline_offset, -self.crossline_offset)[0],
-                  y + self.offset_transformation(
-            self.inline_offset, -self.crossline_offset)[1]])
+        p1 = tuple(
+            [
+                x
+                + self.offset_transformation(self.inline_offset, self.crossline_offset)[
+                    0
+                ],
+                y
+                + self.offset_transformation(self.inline_offset, self.crossline_offset)[
+                    1
+                ],
+            ]
+        )
+        p2 = tuple(
+            [
+                x
+                + self.offset_transformation(
+                    self.inline_offset, -self.crossline_offset
+                )[0],
+                y
+                + self.offset_transformation(
+                    self.inline_offset, -self.crossline_offset
+                )[1],
+            ]
+        )
+        p3 = tuple(
+            [
+                x
+                + self.offset_transformation(
+                    -self.inline_offset, -self.crossline_offset
+                )[0],
+                y
+                + self.offset_transformation(
+                    -self.inline_offset, -self.crossline_offset
+                )[1],
+            ]
+        )
+        p4 = tuple(
+            [
+                x
+                + self.offset_transformation(
+                    -self.inline_offset, self.crossline_offset
+                )[0],
+                y
+                + self.offset_transformation(
+                    -self.inline_offset, self.crossline_offset
+                )[1],
+            ]
+        )
 
-        p3 = tuple([x + self.offset_transformation(
-            -self.inline_offset, -self.crossline_offset)[0],
-                    y + self.offset_transformation(
-            -self.inline_offset, -self.crossline_offset)[1]])
+        points = ()
+        for p in [p1, p2, p3, p4]:
+            if geodetic:
+                p = self.transform_point(back_tr, p[0], p[1])
 
-        p4 = tuple([x + self.offset_transformation(
-            -self.inline_offset, self.crossline_offset)[0],
-                    y + self.offset_transformation(
-            -self.inline_offset, self.crossline_offset)[1]])
+            else:
+                pass
 
-        return p1, p2, p3, p4
+            p = QgsPointXY(p[0], p[1])
+            points += (p,)
+
+        return points
 
 
-class ActiveSpreadMapTool(QgsMapToolEmitPoint):
+class ActivePatchMapTool(QgsMapToolEmitPoint):
     def __init__(self, canvas, azimuth, inline, crossline):
         self.canvas = canvas
-        self.cm = CalcMap(azimuth, inline, crossline)
+        self.cm = CalcMap(
+            self.canvas,
+            azimuth,
+            inline,
+            crossline,
+        )
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
         self.rubber_band = None
         self.marker = None
 
-    def create_spread(self):
-        self.rubber_band = QgsRubberBand(self.canvas, True)
+    def create_patch(self):
+        self.rubber_band = QgsRubberBand(self.canvas)
         self.rubber_band.setColor(Qt.blue)
         self.rubber_band.setFillColor(Qt.transparent)
         self.rubber_band.setWidth(2)
@@ -120,15 +213,15 @@ class ActiveSpreadMapTool(QgsMapToolEmitPoint):
     def reset(self):
         self.canvas.scene().removeItem(self.marker)
         self.canvas.scene().removeItem(self.rubber_band)
-        #self.rubber_band.reset(True)
+        # self.rubber_band.reset()
 
     def canvasPressEvent(self, e):
         point = self.toMapCoordinates(e.pos())
-        print(f'x: {point.x():.2f}, y: {point.y():.2f}')
+        # print(f"x: {point.x():.2f}, y: {point.y():.2f}")
         point = QgsPoint(point.x(), point.y())
 
         self.reset()
-        self.create_spread()
+        self.create_patch()
         self.show_rect(point)
         self.show_marker(point)
 
@@ -137,16 +230,10 @@ class ActiveSpreadMapTool(QgsMapToolEmitPoint):
 
     def show_rect(self, point):
         p1, p2, p3, p4 = self.cm.add_patch(point.x(), point.y())
-
-        point1 = QgsPointXY(p1[0], p1[1])
-        point2 = QgsPointXY(p2[0], p2[1])
-        point3 = QgsPointXY(p3[0], p3[1])
-        point4 = QgsPointXY(p4[0], p4[1])
-
-        self.rubber_band.addPoint(point1, False)
-        self.rubber_band.addPoint(point2, False)
-        self.rubber_band.addPoint(point3, False)
-        self.rubber_band.addPoint(point4, True)    # true to update canvas
+        self.rubber_band.addPoint(p1, False)
+        self.rubber_band.addPoint(p2, False)
+        self.rubber_band.addPoint(p3, False)
+        self.rubber_band.addPoint(p4, True)  # true to update canvas
         self.rubber_band.show()
 
     def deactivate(self):
@@ -168,20 +255,29 @@ class ActiveReceivers:
         self.plugin_dir = os.path.dirname(__file__)
 
         self.actions = []
-        self.menu = self.tr(u'&Active Receivers')
+        self.menu = self.tr("&Active Receivers")
         self.first_start = None
-        self.spread = None
+        self.patch = None
         self.azimuth = AZIMUTH
         self.inline_offset = OFFSET_INLINE
         self.crossline_offset = OFFSET_CROSSLINE
 
     def tr(self, message):
-        return QCoreApplication.translate('ActiveReceivers', message)
+        return QCoreApplication.translate("ActiveReceivers", message)
 
     def add_action(
-        self, icon_path, text, callback,
-        checkable_flag=True, enabled_flag=True, add_to_menu=True, add_to_toolbar=True,
-        status_tip=None, whats_this=None, parent=None):
+        self,
+        icon_path,
+        text,
+        callback,
+        checkable_flag=True,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None,
+    ):
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -199,35 +295,30 @@ class ActiveReceivers:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
         return action
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, 'icon.png')
+        icon_path = os.path.join(self.plugin_dir, "icon.png")
         self.add_action(
             icon_path,
-            text=self.tr(u'Show active receivers'),
+            text=self.tr("Show active receivers"),
             callback=self.run,
-            parent=self.iface.mainWindow())
-
+            parent=self.iface.mainWindow(),
+        )
         self.first_start = True
-
 
     def unload(self):
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Active Receivers'),
-                action)
+            self.iface.removePluginMenu(self.tr("&Active Receivers"), action)
             self.iface.removeToolBarIcon(action)
 
     def run(self):
         try:
-            self.spread.deactivate()
+            self.patch.deactivate()
 
         except AttributeError:
             pass
@@ -239,7 +330,6 @@ class ActiveReceivers:
             dlg.lineEdit_azimuth.setText(str(self.azimuth))
             dlg.lineEdit_inline.setText(str(self.inline_offset))
             dlg.lineEdit_crossline.setText(str(self.crossline_offset))
-
             dlg.show()
             result = dlg.exec_()
 
@@ -251,12 +341,13 @@ class ActiveReceivers:
 
         if self.actions[0].isChecked():
             canvas = self.iface.mapCanvas()
-            self.spread = ActiveSpreadMapTool(
-                canvas, self.azimuth, self.inline_offset, self.crossline_offset)
-            canvas.setMapTool(self.spread)
+            self.patch = ActivePatchMapTool(
+                canvas, self.azimuth, self.inline_offset, self.crossline_offset
+            )
+            canvas.setMapTool(self.patch)
 
         else:
-            print('====> exit plugin')
-            self.spread.deactivate()
-            self.iface.mapCanvas().unsetMapTool(self.spread)
+            # print("====> exit plugin")
+            self.patch.deactivate()
+            self.iface.mapCanvas().unsetMapTool(self.patch)
             self.first_start = True
