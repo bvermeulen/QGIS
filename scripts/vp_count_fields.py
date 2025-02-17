@@ -9,6 +9,7 @@
 ***************************************************************************
 """
 
+from enum import Enum
 import time
 import csv
 from collections import Counter
@@ -20,24 +21,23 @@ from qgis.core import (
     QgsProcessingFeedback,
     QgsProcessingParameterMultipleLayers,
     QgsProcessingParameterFileDestination,
+    QgsProcessingParameterEnum,
 )
 
-farm_categories = [
-    "Empty land",
-    "In the farmland",
-    "Good Track＞4m",
-    "Track affect by farmland",
-    "Track disappeared",
-    "Track need wide",
-]
-selected_farm_categories = [
-    farm_categories[i] for i in range(6) if i in [0, 1, 2, 3, 4, 5]
-]
+
+class VpCategories(Enum):
+    FARM_EMPTY = "Empty land"
+    FARM_CROP = "In the farmland"
+    TRACK_GOOD = "Good Track＞4m"
+    TRACK_FARM = "Track affect by farmland"
+    TRACK_REMOVED = "Track disappeared"
+    TRACK_WIDEN = "Track need wide"
 
 
 class VpCount(QgsProcessingAlgorithm):
 
     LAYERS = "LAYERS"
+    VP_CATEGORY = "VP_CATEGORY"
     FILE = "FILE"
     OUTPUT = "OUTPUT"
 
@@ -64,6 +64,16 @@ class VpCount(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterFileDestination(self.FILE, "CSV file", "csv (*.csv)")
+        )
+
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                self.VP_CATEGORY,
+                "VP categories to be included",
+                [c.name for c in VpCategories],
+                defaultValue=[i for i, _ in enumerate(VpCategories)],
+                allowMultiple=True,
+            )
         )
 
     def processAlgorithm(
@@ -96,6 +106,11 @@ class VpCount(QgsProcessingAlgorithm):
             )
             return {self.OUTPUT: None}
 
+        # select VP categories
+        indexes = self.parameterAsEnums(parameters, self.VP_CATEGORY, context)
+        vp_categories = list(VpCategories)
+        selected_vp_categories = [vp_categories[index].value for index in indexes]
+
         # set the csv name and header
         csv_file_name = self.parameterAsFile(parameters, self.FILE, context)
         if "temp/processing" in csv_file_name.lower():
@@ -122,8 +137,8 @@ class VpCount(QgsProcessingAlgorithm):
 
                 if point.geometry().intersects(field.geometry()):
                     if (
-                        farm_category := point.attributeMap().get("Farm_Cate")
-                    ) in selected_farm_categories:
+                        vp_category := point.attributeMap().get("Farm_Cate")
+                    ) in selected_vp_categories:
                         farm_id = field.attributeMap().get("Id")
                         farm_count[farm_id] += 1
                         csv_data.append(
@@ -132,7 +147,7 @@ class VpCount(QgsProcessingAlgorithm):
                                 point.attributeMap().get("Preplot_P"),
                                 field.attributeMap().get("Date"),
                                 field.attributeMap().get("Status"),
-                                farm_category,
+                                vp_category,
                                 farm_count[farm_id],
                             ]
                         )
