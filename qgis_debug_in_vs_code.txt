@@ -1,0 +1,62 @@
+Instructions on how to debug QGIS plugins in VS Code on Windows 11
+(QGIS 3.40.2; VS Code 1.96.4)
+
+1. In order get the correct QGIS environment in VS Code, you need to start VS Code in the osgeo4w shell terminal
+2. First add additional paths in C:\Program Files\QGIS 3.40.2\etc\ini by adding the file vscode.bat:
+	SET PYTHONPATH=%OSGEO4W_ROOT%\apps\qgis\python
+	SET PATH=%PATH%;%LOCALAPPDATA%\Programs\Microsoft VS Code\bin
+3. Locate the osgeo4w shell shortcut location and open it as an administrator
+4. pip install debugpy (this will install debugpy in the QGIS site-packages)
+5. exit
+6. open osgeo4w shell normally (not as administrator)
+7. type code to see if VS Code starts and select the QGIS repository; intellisense and black should be working
+   with the python version as used by QGIS
+8. Setup the VS Code launch.json file:
+	{
+	    "version": "0.2.0",
+	    "configurations": [
+		{
+		    "name": "Remote Attach",
+		    "type": "debugpy",
+		    "request": "attach",
+		    "connect": {
+			"host": "localhost",
+			"port": 5678
+		    },
+		    "pathMappings": [
+			{
+			    "localRoot": "${workspaceFolder}/plugins",
+			    "remoteRoot": "C:/Users/bruno/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins"
+			}
+		    ]
+		},
+		{
+		    "name": "Current File",
+		    "type": "debugpy",
+		    "request": "launch",
+		    "program": "${file}",
+		    "console": "integratedTerminal"
+		},
+	    ]
+	}
+9. start QGIS normal
+10. Install the plugin: Enable Debug for Visual Studio and exit QGIS
+11. Go the the plugin folder: C:\Users\bruno\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\debug_vs
+12. Edit the file __init__.py by adding the line self.debugpy.configure(python="python3") where there is the 
+    import of debugpy
+        try:
+            import debugpy
+
+            self.debugpy = debugpy
+            self.debugpy.configure(python="python3")
+13. Restart QGIS and Enable Debug for Visual Studio. A message will briefly appear: 
+	DebugVS : Remote Debug for Visual Studio is running ("request": "enable_attach", "Port": 5678, "host": "localhost")
+14. Start VS Code in the osgeo4w shell as before
+15. Select the plugin you want to debug and set a breakpoint [note this is the file that QGIS is using (not the one in the vs code development repository!]
+16. In Run and Debug, select and run Remote Attach. A blue status line will appear in VS Code at the bottom
+    Note: Remote Attach will not work unless Enable Debug for Visual Studio is enabled in QGIS
+17. In QGIS start and operate the plugin you want to debug (same as selected in VS Code)
+18. In VS Code you can now debug this plugin while it is run in QGIS
+         
+
+
