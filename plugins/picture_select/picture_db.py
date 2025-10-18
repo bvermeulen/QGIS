@@ -62,14 +62,14 @@ class Exif:
             seconds = fractions[2][0] / fractions[2][1]
 
             if fractions[1][0] == 0 and fractions[2][0] == 0:
-                lat_long_str = f"{ref} {degrees:.4f}\u00B0"
+                lat_long_str = f"{ref} {degrees:.4f}\u00b0"
 
             elif fractions[2][0] == 0:
-                lat_long_str = f'{ref} {degrees:.0f}\u00B0 {minutes:.2f}"'
+                lat_long_str = f'{ref} {degrees:.0f}\u00b0 {minutes:.2f}"'
 
             else:
                 lat_long_str = (
-                    f"{ref} {degrees:.0f}\u00B0 {minutes:.0f}\" {seconds:.0f}'"
+                    f"{ref} {degrees:.0f}\u00b0 {minutes:.0f}\" {seconds:.0f}'"
                 )
 
             lat_long = degrees + minutes / 60 + seconds / 3600
@@ -201,24 +201,28 @@ class PictureDb:
             file_size=data_from_table_files[6],
             file_checked=data_from_table_files[7],
         )
-        info_meta = InfoTable(
-            country=geolocation_info.get("country", ""),
-            state=", ".join(
-                v
-                for v in [geolocation_info.get(k, "") for k in ["state", "province"]]
-                if v
-            ),
-            city=", ".join(
-                v
-                for v in [
-                    geolocation_info.get(k, "")
-                    for k in ["city", "municipality", "town", "village"]
-                ]
-                if v
-            ),
-            suburb=geolocation_info.get("suburb", ""),
-            road=geolocation_info.get("road", ""),
-        )
+        info_meta = InfoTable(country="", state="", city="", suburb="", road="")
+        if geolocation_info:
+            info_meta = InfoTable(
+                country=geolocation_info.get("country", ""),
+                state=", ".join(
+                    v
+                    for v in [
+                        geolocation_info.get(k, "") for k in ["state", "province"]
+                    ]
+                    if v
+                ),
+                city=", ".join(
+                    v
+                    for v in [
+                        geolocation_info.get(k, "")
+                        for k in ["city", "municipality", "town", "village"]
+                    ]
+                    if v
+                ),
+                suburb=geolocation_info.get("suburb", ""),
+                road=geolocation_info.get("road", ""),
+            )
         assert (
             pic_meta.id == file_meta.picture_id
         ), "load_picture_meta: database integrity error"
