@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-/***************************************************************************
+***************************************************************************
  ActiveReceivers
                                  A QGIS plugin
  Shows a rectangle centered on source point
@@ -12,7 +12,7 @@
         email                : bruno_vermeulen2001@yahoo.com
  ***************************************************************************/
 
-/***************************************************************************
+***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -44,6 +44,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsGeometry,
+    QgsCircle
 )
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsVertexMarker
 
@@ -56,6 +57,7 @@ from .active_receivers_dialog import ActiveReceiversDialog
 AZIMUTH = 0.0  # degrees [0 .. 360]
 OFFSET_INLINE = 1000  # meters
 OFFSET_CROSSLINE = 500  # meters
+CHECKBOX_CIRCLE = False
 
 
 class CalcMap:
@@ -167,7 +169,6 @@ class CalcMap:
                 )[1],
             ]
         )
-
         points = ()
         for p in [p1, p2, p3, p4]:
             if geodetic:
@@ -183,46 +184,56 @@ class CalcMap:
 
 
 class ActivePatchMapTool(QgsMapToolEmitPoint):
-    def __init__(self, canvas, azimuth, inline, crossline):
+    def __init__(self, canvas, azimuth, inline, crossline, checkbox_circle):
         self.canvas = canvas
+        self.checkbox_circle = checkbox_circle
+        self.inline = inline
         self.cm = CalcMap(
             self.canvas,
             azimuth,
-            inline,
+            self.inline,
             crossline,
         )
         QgsMapToolEmitPoint.__init__(self, self.canvas)
-
-        self.rubber_band = None
+        self.rectangle = None
+        self.circle = None
         self.marker = None
 
-    def create_patch(self):
-        self.rubber_band = QgsRubberBand(self.canvas)
-        self.rubber_band.setColor(Qt.blue)
-        self.rubber_band.setFillColor(Qt.transparent)
-        self.rubber_band.setWidth(2)
-        self.rubber_band.reset(QgsWkbTypes.PolygonGeometry)
-
+    def create_marker(self):
         self.marker = QgsVertexMarker(self.canvas)
         self.marker.setColor(Qt.red)
         self.marker.setIconSize(3)
-        # or ICON_BOX, ICON_X
         self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
         self.marker.setPenWidth(3)
 
+    def create_rectangle(self):
+        self.rectangle = QgsRubberBand(self.canvas)
+        self.rectangle.setColor(Qt.blue)
+        self.rectangle.setFillColor(Qt.transparent)
+        self.rectangle.setWidth(2)
+        self.rectangle.reset(QgsWkbTypes.PolygonGeometry)
+
     def reset(self):
-        self.canvas.scene().removeItem(self.marker)
-        self.canvas.scene().removeItem(self.rubber_band)
-        # self.rubber_band.reset()
+        if self.marker:
+            self.canvas.scene().removeItem(self.marker)
+    
+        if self.rectangle:
+            self.canvas.scene().removeItem(self.rectangle)
 
     def canvasPressEvent(self, e):
         point = self.toMapCoordinates(e.pos())
         # print(f"x: {point.x():.2f}, y: {point.y():.2f}")
         point = QgsPoint(point.x(), point.y())
-
         self.reset()
-        self.create_patch()
-        self.show_rect(point)
+        self.create_rectangle()
+
+        if self.checkbox_circle:
+            self.show_circle(point)
+
+        else:
+            self.show_rect(point)
+
+        self.create_marker()
         self.show_marker(point)
 
     def show_marker(self, point):
@@ -230,11 +241,16 @@ class ActivePatchMapTool(QgsMapToolEmitPoint):
 
     def show_rect(self, point):
         p1, p2, p3, p4 = self.cm.add_patch(point.x(), point.y())
-        self.rubber_band.addPoint(p1, False)
-        self.rubber_band.addPoint(p2, False)
-        self.rubber_band.addPoint(p3, False)
-        self.rubber_band.addPoint(p4, True)  # true to update canvas
-        self.rubber_band.show()
+        self.rectangle.addPoint(p1, False)
+        self.rectangle.addPoint(p2, False)
+        self.rectangle.addPoint(p3, False)
+        self.rectangle.addPoint(p4, True)  # true to update canvas
+        self.rectangle.show()
+
+    def show_circle(self, point):
+        circle = QgsCircle.fromCenterDiameter(point, 2 * self.inline)
+        self.rectangle.setToGeometry(QgsGeometry.fromWkt(circle.toCircularString().asWkt()))
+        self.rectangle.show()
 
     def deactivate(self):
         self.reset()
@@ -261,6 +277,7 @@ class ActiveReceivers:
         self.azimuth = AZIMUTH
         self.inline_offset = OFFSET_INLINE
         self.crossline_offset = OFFSET_CROSSLINE
+        self.checkbox_circle = CHECKBOX_CIRCLE
 
     def tr(self, message):
         return QCoreApplication.translate("ActiveReceivers", message)
@@ -278,7 +295,6 @@ class ActiveReceivers:
         whats_this=None,
         parent=None,
     ):
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -330,6 +346,7 @@ class ActiveReceivers:
             dlg.lineEdit_azimuth.setText(str(self.azimuth))
             dlg.lineEdit_inline.setText(str(self.inline_offset))
             dlg.lineEdit_crossline.setText(str(self.crossline_offset))
+            dlg.checkBox_circle.setChecked(self.checkbox_circle)
             dlg.show()
             result = dlg.exec_()
 
@@ -337,12 +354,17 @@ class ActiveReceivers:
             self.azimuth = float(dlg.lineEdit_azimuth.text())
             self.inline_offset = float(dlg.lineEdit_inline.text())
             self.crossline_offset = float(dlg.lineEdit_crossline.text())
+            self.checkbox_circle = dlg.checkBox_circle.isChecked()
             dlg.close()
 
         if self.actions[0].isChecked():
             canvas = self.iface.mapCanvas()
             self.patch = ActivePatchMapTool(
-                canvas, self.azimuth, self.inline_offset, self.crossline_offset
+                canvas, 
+                self.azimuth, 
+                self.inline_offset, 
+                self.crossline_offset,
+                self.checkbox_circle
             )
             canvas.setMapTool(self.patch)
 
