@@ -4,7 +4,7 @@
 
 [general]
 name=Picture Select Tool
-qgisMinimumVersion=3.0
+qgisMinimumVersion=4.0
 description=This plugin selects pictures
 version=0.1
 author=Bruno Vermeulen

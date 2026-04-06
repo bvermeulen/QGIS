@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 /***************************************************************************
  PictureSelect
                                  A QGIS plugin
@@ -20,51 +20,64 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-'''
+"""
 import os
 
 # if using Linux then add a path to the site-packages
-if os.name == 'posix':
+if os.name == "posix":
     import sys
+
     import_path = os.path.expanduser(
-        '~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages')
+        "~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
+    )
     sys.path.insert(0, import_path)
 
+from qgis.PyQt import QtGui
 from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import (
-    QgsProject, QgsFeatureRequest, QgsPointXY, QgsCoordinateTransform,
-    QgsCoordinateReferenceSystem, QgsRectangle, QgsWkbTypes,
+    QgsProject,
+    QgsFeatureRequest,
+    QgsPointXY,
+    QgsCoordinateTransform,
+    QgsCoordinateReferenceSystem,
+    QgsRectangle,
+    QgsWkbTypes,
 )
 from qgis.gui import (
-    QgsMapToolEmitPoint, QgsVertexMarker, QgsRubberBand,
+    QgsMapToolEmitPoint,
+    QgsVertexMarker,
+    QgsRubberBand,
 )
 
 from .pyqt_picture import Mode, PictureShow
 
 # Initialize Qt resources from file resources.py
 from .resources import qInitResources
+
 qInitResources()
 
 from .picture_select_dlg import PictureSelectDialog, START_YEAR, END_YEAR
 
 year_range = range(START_YEAR, END_YEAR + 1)
 
+
 class SelectRectanglePicLayer:
     def __init__(self, years_selected):
-        pictures_layer = 'picture year'
+        pictures_layer = "picture year"
         self.layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
         self.tr_wgs = QgsCoordinateTransform(
             QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
-            QgsCoordinateReferenceSystem('EPSG:4326'),
-            QgsProject.instance().transformContext()
+            QgsCoordinateReferenceSystem("EPSG:4326"),
+            QgsProject.instance().transformContext(),
         )
         # make subselection of years; add dummy year 9999, 9999 to make sure tuple has
         # a minimum length 2; if year 2010 is true then select all years less than 2011
         years = tuple(
-            year for year, val in years_selected.items() if val and year != 2010)
+            year for year, val in years_selected.items() if val and year != 2010
+        )
         years = years + (9999, 9999)
         select_year = f'"year" in {years}'
         if years_selected[2010]:
@@ -75,8 +88,7 @@ class SelectRectanglePicLayer:
         if start_point is None or end_point is None:
             return []
 
-        elif (start_point.x() == end_point.x() or
-              start_point.y() == end_point.y()):
+        elif start_point.x() == end_point.x() or start_point.y() == end_point.y():
             return []
 
         start_point = self.tr_wgs.transform(start_point)
@@ -93,7 +105,9 @@ class SelectRectanglePicLayer:
         for feature in self.layer.getFeatures(self.request):
             if pic_id == feature.attributes()[2]:
                 return self.tr_wgs.transform(
-                    feature.geometry().asPoint(), QgsCoordinateTransform.ReverseTransform)
+                    feature.geometry().asPoint(),
+                    QgsCoordinateTransform.ReverseTransform,
+                )
         return None
 
 
@@ -104,9 +118,9 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
         self.select_rect_pic = SelectRectanglePicLayer(years_selected)
 
-        self.rubberBand = QgsRubberBand(self.canvas, True)
-        self.rubberBand.setColor(Qt.blue)
-        self.rubberBand.setFillColor(Qt.transparent)
+        self.rubberBand = QgsRubberBand(self.canvas)
+        self.rubberBand.setColor(QtGui.QColorConstants.Blue)
+        self.rubberBand.setFillColor(Qt.GlobalColor.transparent)
         self.rubberBand.setWidth(2)
 
         self.marker = None
@@ -116,7 +130,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
-        self.rubberBand.reset(True)
+        self.rubberBand.reset()
         self.pic_id = None
         self.canvas.scene().removeItem(self.marker)
 
@@ -134,7 +148,8 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
     def canvasReleaseEvent(self, e):
         self.isEmittingPoint = False
         pic_ids = self.select_rect_pic.select_pics_in_rectangle(
-            self.start_point, self.end_point)
+            self.start_point, self.end_point
+        )
 
         if pic_ids:
             self.pic_show = PictureShow(mode=Mode.Multi)
@@ -153,15 +168,11 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         if start_point.x() == end_point.x() or start_point.y() == end_point.y():
             return
 
-        self.rubberBand.addPoint(QgsPointXY(
-            start_point.x(), start_point.y()), False)
-        self.rubberBand.addPoint(QgsPointXY(
-            start_point.x(), end_point.y()), False)
-        self.rubberBand.addPoint(QgsPointXY(
-            end_point.x(), end_point.y()), False)
+        self.rubberBand.addPoint(QgsPointXY(start_point.x(), start_point.y()), False)
+        self.rubberBand.addPoint(QgsPointXY(start_point.x(), end_point.y()), False)
+        self.rubberBand.addPoint(QgsPointXY(end_point.x(), end_point.y()), False)
         # true to update canvas
-        self.rubberBand.addPoint(QgsPointXY(
-            end_point.x(), start_point.y()), True)
+        self.rubberBand.addPoint(QgsPointXY(end_point.x(), start_point.y()), True)
         self.rubberBand.show()
 
     def show_marker(self, _id):
@@ -169,7 +180,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         if point:
             self.canvas.scene().removeItem(self.marker)
             self.marker = QgsVertexMarker(self.canvas)
-            self.marker.setColor(Qt.yellow)
+            self.marker.setColor(QtGui.QColorConstants.Yellow)
             self.marker.setIconSize(6)  # or ICON_BOX, ICON_X
             self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
             self.marker.setPenWidth(3)
@@ -187,25 +198,27 @@ class PictureSelect:
         self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.actions = []
-        self.menu = self.tr(u'&Picture Select')
+        self.menu = self.tr("&Picture Select")
         self.first_start = None
         self.select_pic = None
         self.years_selection = {year: True for year in year_range}
 
     def tr(self, message):
-        return QCoreApplication.translate('PictureSelect', message)
+        return QCoreApplication.translate("PictureSelect", message)
 
-    def add_action(self,
-                   icon_path,
-                   text,
-                   callback,
-                   checkable=True,
-                   enabled_flag=True,
-                   add_to_menu=True,
-                   add_to_toolbar=True,
-                   status_tip=None,
-                   whats_this=None,
-                   parent=None):
+    def add_action(
+        self,
+        icon_path,
+        text,
+        callback,
+        checkable=True,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None,
+    ):
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -225,31 +238,27 @@ class PictureSelect:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
         return action
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, 'icon.png')
+        icon_path = os.path.join(self.plugin_dir, "icon.png")
         self.add_action(
             icon_path,
-            text=self.tr('Picture Select'),
+            text=self.tr("Picture Select"),
             callback=self.run,
-            parent=self.iface.mainWindow())
+            parent=self.iface.mainWindow(),
+        )
 
         self.first_start = True
 
     def unload(self):
-        '''Removes the plugin menu item and icon from QGIS GUI.'''
+        """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Picture Select'),
-                action
-            )
+            self.iface.removePluginMenu(self.tr("&Picture Select"), action)
             self.iface.removeToolBarIcon(action)
 
     def run(self):
@@ -264,13 +273,13 @@ class PictureSelect:
             self.first_start = False
             dlg = PictureSelectDialog()
             for year, val in self.years_selection.items():
-                getattr(dlg, f'cb_{year}').setChecked(val)
+                getattr(dlg, f"cb_{year}").setChecked(val)
             dlg.show()
-            result = dlg.exec_()
+            result = dlg.exec()
 
         if result:
             for year in self.years_selection:
-                self.years_selection[year] = getattr(dlg, f'cb_{year}').isChecked()
+                self.years_selection[year] = getattr(dlg, f"cb_{year}").isChecked()
             dlg.close()
 
         if self.actions[0].isChecked():
