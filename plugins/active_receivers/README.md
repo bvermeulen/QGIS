@@ -1,9 +1,9 @@
-# plugin_template
+# active_receiver
 
-description_template
+Shows extent of the area for the active receivers with the source location in the center
 
 ## About
-about_template
+A little tool for seismic acquisition
 
 ## Author
 Bruno Vermeulen <bruno.vermeulen@hotmail.com>

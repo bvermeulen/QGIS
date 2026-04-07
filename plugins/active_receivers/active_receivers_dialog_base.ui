@@ -29,7 +29,6 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-
   <widget class="QLabel" name="label_azimuth">
    <property name="geometry">
     <rect>
@@ -53,7 +52,6 @@
     </rect>
    </property>
   </widget>
-
   <widget class="QLabel" name="label_inline">
    <property name="geometry">
     <rect>
@@ -77,7 +75,6 @@
     </rect>
    </property>
   </widget>
-
   <widget class="QLabel" name="label_crossline">
    <property name="geometry">
     <rect>
@@ -101,8 +98,20 @@
     </rect>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBox_circle">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>140</y>
+     <width>121</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Circle radius (inline)</string>
+   </property>
+  </widget>
  </widget>
-
  <resources/>
  <connections>
   <connection>
