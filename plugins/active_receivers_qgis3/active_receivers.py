@@ -32,7 +32,6 @@ if os.name == "posix":
     )
     sys.path.insert(0, import_path)
 
-from qgis.PyQt import QtGui
 from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -47,6 +46,10 @@ from qgis.core import (
     QgsGeometry,
 )
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsVertexMarker
+
+from .resources import qInitResources
+
+qInitResources()
 
 from .active_receivers_dialog import ActiveReceiversDialog
 
@@ -195,13 +198,13 @@ class ActivePatchMapTool(QgsMapToolEmitPoint):
 
     def create_patch(self):
         self.rubber_band = QgsRubberBand(self.canvas)
-        self.rubber_band.setColor(QtGui.QColorConstants.Blue)
-        self.rubber_band.setFillColor(Qt.GlobalColor.transparent)
+        self.rubber_band.setColor(Qt.blue)
+        self.rubber_band.setFillColor(Qt.transparent)
         self.rubber_band.setWidth(2)
         self.rubber_band.reset(QgsWkbTypes.PolygonGeometry)
 
         self.marker = QgsVertexMarker(self.canvas)
-        self.marker.setColor(QtGui.QColorConstants.Red)
+        self.marker.setColor(Qt.red)
         self.marker.setIconSize(3)
         # or ICON_BOX, ICON_X
         self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
@@ -299,7 +302,7 @@ class ActiveReceivers:
         return action
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, "resources", "images", "icon.png")
+        icon_path = os.path.join(self.plugin_dir, "icon.png")
         self.add_action(
             icon_path,
             text=self.tr("Show active receivers"),
@@ -328,7 +331,7 @@ class ActiveReceivers:
             dlg.lineEdit_inline.setText(str(self.inline_offset))
             dlg.lineEdit_crossline.setText(str(self.crossline_offset))
             dlg.show()
-            result = dlg.exec()
+            result = dlg.exec_()
 
         if result:
             self.azimuth = float(dlg.lineEdit_azimuth.text())
