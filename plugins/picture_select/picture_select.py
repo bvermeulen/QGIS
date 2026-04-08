@@ -11,24 +11,13 @@
         copyright            : (C) 2020 by Bruno Vermeulen
         email                : bruno.vermeulen@hotmail.com
  ***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 """
 import os
-
-# if using Linux then add a path to the site-packages
 if os.name == "posix":
     import sys
 
     import_path = os.path.expanduser(
-        "~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
+        "/home/bvermeulen/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
     )
     sys.path.insert(0, import_path)
 
@@ -53,12 +42,6 @@ from qgis.gui import (
 )
 
 from .pyqt_picture import Mode, PictureShow
-
-# Initialize Qt resources from file resources.py
-from .resources import qInitResources
-
-qInitResources()
-
 from .picture_select_dlg import PictureSelectDialog, START_YEAR, END_YEAR
 
 year_range = range(START_YEAR, END_YEAR + 1)
@@ -245,7 +228,7 @@ class PictureSelect:
         return action
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, "icon.png")
+        icon_path = os.path.join(self.plugin_dir, "resources", "images", "icon.png")
         self.add_action(
             icon_path,
             text=self.tr("Picture Select"),

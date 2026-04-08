@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>373</width>
-    <height>293</height>
+    <width>336</width>
+    <height>308</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,16 +17,16 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>250</y>
-     <width>171</width>
+     <y>260</y>
+     <width>211</width>
      <height>32</height>
     </rect>
    </property>
    <property name="orientation">
-    <enum>Qt::Horizontal</enum>
+    <enum>Qt::Orientation::Horizontal</enum>
    </property>
    <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+    <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
    </property>
   </widget>
   <widget class="QCheckBox" name="cb_2010">
@@ -211,6 +211,45 @@
     <string>2023</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="cb_2024">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>120</y>
+     <width>71</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>2024</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cb_2025">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>150</y>
+     <width>71</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>2025</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cb_2026">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>180</y>
+     <width>71</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>2026</string>
+   </property>
+  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
@@ -227,11 +266,16 @@
   <widget class="QPushButton" name="pb_deselect_all">
    <property name="geometry">
     <rect>
-     <x>260</x>
+     <x>230</x>
      <y>90</y>
      <width>91</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Deselect all</string>
@@ -240,11 +284,16 @@
   <widget class="QPushButton" name="pb_select_all">
    <property name="geometry">
     <rect>
-     <x>260</x>
+     <x>230</x>
      <y>60</y>
      <width>91</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Select all</string>

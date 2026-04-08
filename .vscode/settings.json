@@ -1,0 +1,12 @@
+{
+    "python.analysis.extraPaths": [
+        "/usr/share/qgis/python",
+        "/usr/lib/python3/dist-packages/qgis",
+        "/usr/share/qgis/python/plugins"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/usr/share/qgis/python",
+        "/usr/share/qgis/python/plugins"
+    ]
+
+}

@@ -8,29 +8,10 @@
                              -------------------
         begin                : 2020-09-24
         copyright            : (C) 2020 by Bruno Vermeulen
-        email                : bruno_vermeulen2001@yahoo.com
+        email                : bruno.vermeulen2001@yhotmail.com
         git sha              : $Format:%H$
  ***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
- This script initializes the plugin, making it known to QGIS.
 """
-
-
-# noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load PictureSelect class from file PictureSelect.
-
-    :param iface: A QGIS interface instance.
-    :type iface: QgsInterface
-    """
-    #
     from .picture_select import PictureSelect
     return PictureSelect(iface)
