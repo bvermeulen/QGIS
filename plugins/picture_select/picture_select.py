@@ -12,7 +12,9 @@
         email                : bruno.vermeulen@hotmail.com
  ***************************************************************************/
 """
+
 import os
+
 if os.name == "posix":
     import sys
 
@@ -115,7 +117,9 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.isEmittingPoint = False
         self.rubberBand.reset()
         self.pic_id = None
-        self.canvas.scene().removeItem(self.marker)
+        if self.marker is not None:
+            self.canvas.scene().removeItem(self.marker)
+            self.marker = None
 
         if self.pic_show:
             self.pic_show.cntr_quit()
@@ -161,7 +165,9 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
     def show_marker(self, _id):
         point = self.select_rect_pic.get_mappoint(_id)
         if point:
-            self.canvas.scene().removeItem(self.marker)
+            if self.marker is not None:
+                self.canvas.scene().removeItem(self.marker)
+                self.marker = None
             self.marker = QgsVertexMarker(self.canvas)
             self.marker.setColor(QtGui.QColorConstants.Yellow)
             self.marker.setIconSize(6)  # or ICON_BOX, ICON_X

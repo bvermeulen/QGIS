@@ -10,15 +10,15 @@ from qgis.PyQt.QtWidgets import (
     QFrame,
     QShortcut,
 )
-from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtCore import Qt, pyqtSignal, QTimer
 from qgis.PyQt.QtGui import QImage, QPixmap, QPalette, QColor
 
 from .picture_db import PictureDb
 
 anticlockwise_symbol = "\u21b6"
 clockwise_symbol = "\u21b7"
-right_arrow_symbol = "\u25B6"
-left_arrow_symbol = "\u25C0"
+right_arrow_symbol = "\u25b6"
+left_arrow_symbol = "\u25c0"
 border_style = "margin:2px; " "padding:2px 5px; " "border:1px solid black; "
 
 
@@ -174,7 +174,8 @@ class PictureShow(QWidget):
         info_text = info_to_text(self.info_meta)
         self.text_lbl.setText(meta_text)
         self.info_lbl.setText(info_text)
-        self.resize(self.sizeHint())
+        self.resize(self.minimumSize())
+        QTimer.singleShot(100, self.adjustSize)
 
     def rotate_clockwise(self):
         # note degrees are defined in counter clockwise direction !

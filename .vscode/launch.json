@@ -14,8 +14,8 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/QGIS/plugins",
-                    "remoteRoot": "/home/bvermeulen/.local/share/QGIS/QGIS3/profiles/default/python/plugins"
+                    "localRoot": "${workspaceFolder}/plugins",
+                    "remoteRoot": "/home/bvermeulen/.local/share/QGIS/QGIS4/profiles/default/python/plugins"
                 }
             ]
         },
