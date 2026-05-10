@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import wraps
 from PIL import Image
 from decouple import config
-import psycopg2
+import psycopg
 
 
 @dataclass
@@ -121,12 +121,12 @@ class DbUtils:
                 # add ggsencmode='disable' to resolve unsupported frontend protocol
                 # 1234.5679: server supports 2.0 to 3.0
                 # should be fixed on postgresql 12.3
-                connection = psycopg2.connect(connect_string)
+                connection = psycopg.connect(connect_string)
                 cursor = connection.cursor()
                 result = func(*args, cursor, **kwargs)
                 connection.commit()
 
-            except psycopg2.Error as error:
+            except psycopg.Error as error:
                 print(f"error while connect to PostgreSQL {cls.database}: " f"{error}")
 
             finally:
