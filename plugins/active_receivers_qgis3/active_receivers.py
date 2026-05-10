@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import os
 import numpy as np
 
@@ -28,7 +29,7 @@ if os.name == "posix":
     import sys
 
     import_path = os.path.expanduser(
-        "~/.local/share/QGIS/QGIS3/profiles/default/python/site-packages"
+        "~/.local/share/QGIS/QGIS4/profiles/default/python/site-packages"
     )
     sys.path.insert(0, import_path)
 
