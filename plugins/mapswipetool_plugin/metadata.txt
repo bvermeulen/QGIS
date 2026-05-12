@@ -1,0 +1,50 @@
+[general]
+name:MapSwipe Tool
+description:Swipe active layer with others layers
+about:This plugin is a map tool for swipe active layer.
+  The active layer, or group, will appear above all others.
+  This plugin is developed of collaborative form with IBAMA [1] and APPLIED TECHNOLOGY CO., LTD [2].
+  [1] http://www.ibama.gov.br
+  [2] http://www.apptec.co.jp
+
+version:1.5 (bruno vermeulen)
+qgisMinimumVersion=4.00
+qgisMaximumVersion=4.99
+
+author:Hirofumi Hayashi and Luiz Motta
+email:hayashi@apptec.co.jp,motta.luiz@gmail.com
+
+# category:
+tags:visibility,layers, swipe, IBAMA, APPLIED TECHNOLOGY CO.
+
+homepage:https://github.com/lmotta/mapswipetool_plugin/wiki
+tracker:https://github.com/lmotta/mapswipetool_plugin/issues
+repository:https://github.com/lmotta/mapswipetool_plugin
+
+icon:mapswipetool.png
+
+experimental:True
+deprecated:False
+
+changelog:1.5 (2026-05-12)
+  Ported to QGIS version 4
+  - 1.5 (2026-05-12) Bruno Vermeulen bruno.vermeulen@hotmail.com
+  Fixed issue #11, added "settings.setDevicePixelRatio( 1 )"
+  - 1.3(2024-05-31)
+  Fixed def paint and setLenght
+  - 1.2(2018-12-06)
+  Update metadata
+  - 1.1(2018-10-23)
+  Fixed the translate
+  - 1.0
+  Migrated to QGIS 3.2
+  - 0.5(2015-10-16)
+  When activated plugin, if click it will deactivate plugin
+  - 0.4(2015-10-16)
+  Added Plugins dropdown Menu
+  - 0.3 (2015-10-15)
+  Fixed the bug for change item in legend others OS (Ex. Windows)
+  - 0.2 (2015-10-15)
+  Fixed the bug for installation in Windows
+  - 0.1 (2015-10-14)
+  Start of plugin
