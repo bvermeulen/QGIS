@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import os
 import numpy as np
 
@@ -38,15 +39,17 @@ from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import (
     QgsProject,
-    QgsPoint,
     QgsPointXY,
     QgsWkbTypes,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
-    QgsGeometry,
-    QgsCircle
+    QgsDistanceArea,
 )
-from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsVertexMarker
+from qgis.gui import (
+    QgsMapToolEmitPoint,
+    QgsRubberBand,
+    QgsVertexMarker,
+)
 
 from .resources import qInitResources
 
@@ -58,127 +61,90 @@ AZIMUTH = 0.0  # degrees [0 .. 360]
 OFFSET_INLINE = 1000  # meters
 OFFSET_CROSSLINE = 500  # meters
 CHECKBOX_CIRCLE = False
+CIRCLE_STEPS = 50
 
 
 class CalcMap:
 
     def __init__(self, canvas, azimuth, inline, crossline):
         self.canvas = canvas
-        self.azimuth = np.pi / 180 * azimuth  # converted to radians
+        self.azimuth = azimuth * np.pi / 180
         self.inline_offset = inline
         self.crossline_offset = crossline
-
-    @staticmethod
-    def lonlat2utm_epsg(longitude: float, latitude: float) -> str:
-        zone = f"{(int((longitude + 180) / 6) % 60) + 1:02}"
-        if latitude >= 0.0:
-            return "".join(["EPSG:326", zone])
-
-        else:
-            return "".join(["EPSG:327", zone])
-
-    @staticmethod
-    def transform_point(tr, x, y):
-        geom = QgsGeometry(QgsPoint(x, y))
-        geom.transform(tr)
-        x = geom.asPoint().x()
-        y = geom.asPoint().y()
-        return x, y
-
-    def offset_transformation(self, inline_offset, crossline_offset):
-        """transformation from inline_offset, crossline offset to delta_easting,
-             delta_northing. self.azimuth angle of prospect in degrees
-
-        :Returns:
-            :dx: (m) change in x direction (float)
-            :dy: (m) change in y direction (float)
-        """
-        dx_crossline = crossline_offset * np.cos(self.azimuth)
-        dy_crossline = -crossline_offset * np.sin(self.azimuth)
-        dx_inline = -inline_offset * np.sin(self.azimuth)
-        dy_inline = -inline_offset * np.cos(self.azimuth)
-
-        return dx_inline + dx_crossline, dy_inline + dy_crossline
-
-    def add_patch(self, x: float, y: float) -> tuple[QgsPointXY]:
-        """create 4 corner coordinates based on inline and crossline distances"""
-        csr_canvas = QgsCoordinateReferenceSystem(
+        self.csr_canvas = QgsCoordinateReferenceSystem(
             self.canvas.mapSettings().destinationCrs().authid()
         )
-        geodetic = False
-        if csr_canvas.isGeographic():
-            geodetic = True
-            csr_utm = QgsCoordinateReferenceSystem(self.lonlat2utm_epsg(x, y))
-            tr = QgsCoordinateTransform(
-                csr_canvas,
-                csr_utm,
-                QgsProject.instance(),
-            )
-            back_tr = QgsCoordinateTransform(
-                csr_utm,
-                csr_canvas,
-                QgsProject.instance(),
-            )
-            x, y = self.transform_point(tr, x, y)
+        self.diagonal = np.sqrt(
+            self.inline_offset * self.inline_offset
+            + self.crossline_offset * self.crossline_offset
+        )
+        self.da = QgsDistanceArea()
+        self.da.setEllipsoid(QgsProject.instance().ellipsoid())
+        csr_wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+        self.transform_to_wgs84 = QgsCoordinateTransform(
+            self.csr_canvas, csr_wgs84, QgsProject.instance()
+        )
+        self.transform_to_canvas = QgsCoordinateTransform(
+            csr_wgs84, self.csr_canvas, QgsProject.instance()
+        )
 
-        p1 = tuple(
-            [
-                x
-                + self.offset_transformation(self.inline_offset, self.crossline_offset)[
-                    0
-                ],
-                y
-                + self.offset_transformation(self.inline_offset, self.crossline_offset)[
-                    1
-                ],
-            ]
-        )
-        p2 = tuple(
-            [
-                x
-                + self.offset_transformation(
-                    self.inline_offset, -self.crossline_offset
-                )[0],
-                y
-                + self.offset_transformation(
-                    self.inline_offset, -self.crossline_offset
-                )[1],
-            ]
-        )
-        p3 = tuple(
-            [
-                x
-                + self.offset_transformation(
-                    -self.inline_offset, -self.crossline_offset
-                )[0],
-                y
-                + self.offset_transformation(
-                    -self.inline_offset, -self.crossline_offset
-                )[1],
-            ]
-        )
-        p4 = tuple(
-            [
-                x
-                + self.offset_transformation(
-                    -self.inline_offset, self.crossline_offset
-                )[0],
-                y
-                + self.offset_transformation(
-                    -self.inline_offset, self.crossline_offset
-                )[1],
-            ]
-        )
+    def get_bearing(self, corner_type: str, radial: float = 0) -> float:
+        match corner_type:
+            case "NE":
+                bearing = np.arctan2(self.crossline_offset, self.inline_offset)
+
+            case "SE":
+                bearing = np.arctan2(self.crossline_offset, -self.inline_offset)
+
+            case "SW":
+                bearing = np.arctan2(-self.crossline_offset, -self.inline_offset)
+
+            case "NW":
+                bearing = np.arctan2(-self.crossline_offset, self.inline_offset)
+
+            case "CIRCLE":
+                bearing = radial - self.azimuth
+
+            case _:
+                assert False, f"incorrect option: {corner_type}"
+
+        return bearing + self.azimuth
+
+    def create_point(
+        self, point: QgsPointXY, corner_type: str, diagonal: float, radial: float = 0
+    ) -> QgsPointXY:
+        if self.csr_canvas.isGeographic():
+            point_wgs84 = point
+
+        else:
+            point_wgs84 = self.transform_to_wgs84.transform(point)
+
+        bearing = self.get_bearing(corner_type, radial=radial)
+        pointxy = self.da.measureLineProjected(point_wgs84, diagonal, bearing)[1]
+
+        if self.csr_canvas.isGeographic():
+            return pointxy
+
+        else:
+            return self.transform_to_canvas.transform(pointxy)
+
+    def add_rectangle(self, point: QgsPointXY) -> tuple[QgsPointXY]:
+        """create 4 corner coordinates based on inline and crossline distances"""
+
         points = ()
-        for p in [p1, p2, p3, p4]:
-            if geodetic:
-                p = self.transform_point(back_tr, p[0], p[1])
+        for corner_point in ["NE", "SE", "SW", "NW"]:
+            ptxy = self.create_point(point, corner_point, self.diagonal)
+            points += (ptxy,)
 
-            else:
-                pass
+        return points
 
-            p = QgsPointXY(p[0], p[1])
-            points += (p,)
+    def add_circle(self, point: QgsPointXY) -> tuple[QgsPointXY]:
+        radials = np.linspace(0, 2 * np.pi, CIRCLE_STEPS)
+
+        points = ()
+        for radial in radials:
+            ptxy = self.create_point(point, "CIRCLE", self.inline_offset, radial=radial)
+            points += (ptxy,)
 
         return points
 
@@ -216,40 +182,40 @@ class ActivePatchMapTool(QgsMapToolEmitPoint):
     def reset(self):
         if self.marker:
             self.canvas.scene().removeItem(self.marker)
-    
+
         if self.rectangle:
             self.canvas.scene().removeItem(self.rectangle)
 
     def canvasPressEvent(self, e):
         point = self.toMapCoordinates(e.pos())
-        # print(f"x: {point.x():.2f}, y: {point.y():.2f}")
-        point = QgsPoint(point.x(), point.y())
+        point = QgsPointXY(point.x(), point.y())
         self.reset()
+        self.create_marker()
+        self.show_marker(point)
         self.create_rectangle()
-
         if self.checkbox_circle:
             self.show_circle(point)
 
         else:
-            self.show_rect(point)
+            self.show_rectangle(point)
 
-        self.create_marker()
-        self.show_marker(point)
+    def show_marker(self, point: QgsPointXY):
+        self.marker.setCenter(point)
 
-    def show_marker(self, point):
-        self.marker.setCenter(QgsPointXY(point.x(), point.y()))
-
-    def show_rect(self, point):
-        p1, p2, p3, p4 = self.cm.add_patch(point.x(), point.y())
+    def show_rectangle(self, point: QgsPointXY):
+        p1, p2, p3, p4 = self.cm.add_rectangle(point)
         self.rectangle.addPoint(p1, False)
         self.rectangle.addPoint(p2, False)
         self.rectangle.addPoint(p3, False)
         self.rectangle.addPoint(p4, True)  # true to update canvas
         self.rectangle.show()
 
-    def show_circle(self, point):
-        circle = QgsCircle.fromCenterDiameter(point, 2 * self.inline)
-        self.rectangle.setToGeometry(QgsGeometry.fromWkt(circle.toCircularString().asWkt()))
+    def show_circle(self, point: QgsPointXY):
+        points = self.cm.add_circle(point)
+        for p in points[:-1]:
+            self.rectangle.addPoint(p, False)
+
+        self.rectangle.addPoint(points[-1], True)
         self.rectangle.show()
 
     def deactivate(self):
@@ -360,11 +326,11 @@ class ActiveReceivers:
         if self.actions[0].isChecked():
             canvas = self.iface.mapCanvas()
             self.patch = ActivePatchMapTool(
-                canvas, 
-                self.azimuth, 
-                self.inline_offset, 
+                canvas,
+                self.azimuth,
+                self.inline_offset,
                 self.crossline_offset,
-                self.checkbox_circle
+                self.checkbox_circle,
             )
             canvas.setMapTool(self.patch)
 
