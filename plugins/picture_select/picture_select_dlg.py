@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from pathlib import Path
 from qgis.PyQt import uic, QtWidgets
 
@@ -31,10 +32,10 @@ FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "picture_select_dlg.ui")
 START_YEAR = 2010
 END_YEAR = 2026
 GEO_ITEMS = {
-    "countries": ["countries"],
-    "states": ["states", "provinces"],
-    "cities": ["cities", "municipalities", "towns", "villages"],
-    "roads": ["roads"],
+    "countries": ["country"],
+    "states": ["state"],
+    "cities": ["city", "municipality", "suburb"],
+    "roads": ["road"],
 }
 
 
