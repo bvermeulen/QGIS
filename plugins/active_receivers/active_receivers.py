@@ -81,7 +81,7 @@ class CalcMap:
             self.csr_canvas, csr_wgs84, QgsProject.instance().transformContext()
         )
         self.transform_to_canvas = QgsCoordinateTransform(
-            self.csr_wgs84, csr_canvas, QgsProject.instance().transformContext()
+            csr_wgs84, self.csr_canvas, QgsProject.instance().transformContext()
         )
 
     def get_bearing(self, corner_type: str, radial: float = 0) -> float:
