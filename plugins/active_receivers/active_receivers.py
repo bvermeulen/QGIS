@@ -76,11 +76,12 @@ class CalcMap:
             + self.crossline_offset * self.crossline_offset
         )
         csr_wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+        self.ellipsoid_wgs84 = csr_wgs84.ellipsoidAcronym()
         self.transform_to_wgs84 = QgsCoordinateTransform(
             self.csr_canvas, csr_wgs84, QgsProject.instance().transformContext()
         )
         self.transform_to_canvas = QgsCoordinateTransform(
-            csr_wgs84, self.csr_canvas, QgsProject.instance().transformContext()
+            self.csr_wgs84, csr_canvas, QgsProject.instance().transformContext()
         )
 
     def get_bearing(self, corner_type: str, radial: float = 0) -> float:
@@ -107,7 +108,7 @@ class CalcMap:
 
     def test(self, point):
         da = QgsDistanceArea()
-        da.setEllipsoid("WGS84")
+        da.setEllipsoid(self.ellipsoid_wgs84)
 
         if self.csr_canvas.isGeographic():
             point_wgs84 = point
@@ -143,7 +144,7 @@ class CalcMap:
         self, point: QgsPointXY, corner_type: str, diagonal: float, radial: float = 0
     ) -> QgsPointXY:
         da = QgsDistanceArea()
-        da.setEllipsoid("WGS84")
+        da.setEllipsoid(self.ellipsoid_wgs84)
 
         if self.csr_canvas.isGeographic():
             point_wgs84 = point
