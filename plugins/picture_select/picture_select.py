@@ -13,16 +13,6 @@
  ***************************************************************************/
 """
 
-import os
-
-# if os.name == "posix":
-#     import sys
-
-#     import_path = os.path.expanduser(
-#         "/home/bvermeulen/.local/share/QGIS/QGIS4/profiles/default/python/site-packages"
-#     )
-#     sys.path.insert(0, import_path)
-
 from pathlib import Path
 from qgis.PyQt import QtGui
 from qgis.PyQt.QtCore import Qt, QCoreApplication
