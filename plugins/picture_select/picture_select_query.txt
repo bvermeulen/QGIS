@@ -1,4 +1,5 @@
 # SQL QUERY to be included in QGIS Postgresql database handler
+# the QGIS layer name must be: "picture year"
 
 SELECT
 	id,
