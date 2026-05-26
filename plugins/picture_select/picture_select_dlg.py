@@ -32,10 +32,10 @@ FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "picture_select_dlg.ui")
 START_YEAR = 2010
 END_YEAR = 2026
 GEO_ITEMS = {
-    "countries": ["country"],
-    "states": ["state"],
-    "cities": ["city", "municipality", "suburb"],
-    "roads": ["road"],
+    "countries": ["countries"],
+    "states": ["states", "provinces"],
+    "cities": ["cities", "towns", "villages", "municipalities", "suburbs"],
+    "roads": ["roads"],
 }
 
 
