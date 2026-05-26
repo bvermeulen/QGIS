@@ -15,14 +15,15 @@
 
 import os
 
-if os.name == "posix":
-    import sys
+# if os.name == "posix":
+#     import sys
 
-    import_path = os.path.expanduser(
-        "/home/bvermeulen/.local/share/QGIS/QGIS4/profiles/default/python/site-packages"
-    )
-    sys.path.insert(0, import_path)
+#     import_path = os.path.expanduser(
+#         "/home/bvermeulen/.local/share/QGIS/QGIS4/profiles/default/python/site-packages"
+#     )
+#     sys.path.insert(0, import_path)
 
+from pathlib import Path
 from qgis.PyQt import QtGui
 from qgis.PyQt.QtCore import Qt, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -44,30 +45,45 @@ from qgis.gui import (
 )
 
 from .pyqt_picture import Mode, PictureShow
-from .picture_select_dlg import PictureSelectDialog, START_YEAR, END_YEAR
+from .picture_select_dlg import PictureSelectDialog, START_YEAR, END_YEAR, GEO_ITEMS
 
 year_range = range(START_YEAR, END_YEAR + 1)
 
 
-class SelectRectanglePicLayer:
-    def __init__(self, years_selected):
+class SelectFilterPictureLayer:
+    def __init__(self, years_selected, geo_info):
         pictures_layer = "picture year"
-        self.layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
+        try:
+            self.layer = QgsProject.instance().mapLayersByName(pictures_layer)[0]
+        except IndexError:
+            return
+
         self.tr_wgs = QgsCoordinateTransform(
             QgsCoordinateReferenceSystem(QgsProject.instance().crs().authid()),
             QgsCoordinateReferenceSystem("EPSG:4326"),
             QgsProject.instance().transformContext(),
         )
-        # make subselection of years; add dummy year 9999, 9999 to make sure tuple has
-        # a minimum length 2; if year 2010 is true then select all years less than 2011
-        years = tuple(
-            year for year, val in years_selected.items() if val and year != 2010
-        )
-        years = years + (9999, 9999)
-        select_year = f'"year" in {years}'
-        if years_selected[2010]:
-            select_year += ' or "year" < 2011'
-        self.layer.setSubsetString(select_year)
+        self.layer.setSubsetString(self.build_query_string(years_selected, geo_info))
+
+    @staticmethod
+    def build_query_string(years_selected, geo_info):
+        # make subselection of years; add dummy year 9999 if list is empty
+        # if year 2010 is selected then add all years less than 2011
+        years = [year for year, val in years_selected.items() if val and year != 2010]
+        years = years if years else [9999]
+        query_str = f"(\"year\" in ({','.join(str(y) for y in years)})"
+        query_str += f' or "year" < 2011)' if years_selected[2010] else ")"
+
+        # add geolocation filter
+        for geo_key, subkeys in GEO_ITEMS.items():
+            pattern = "|".join(c.strip() for c in geo_info[geo_key].split(","))
+            if not pattern:
+                continue
+            query_str += f" and ({subkeys[0]} ~* '{pattern}'"
+            for subkey in subkeys[1:]:
+                query_str += f" or {subkey} ~* '{pattern}'"
+            query_str += ")"
+        return query_str
 
     def select_pics_in_rectangle(self, start_point, end_point):
         if start_point is None or end_point is None:
@@ -83,7 +99,6 @@ class SelectRectanglePicLayer:
         picture_ids = []
         for feature in self.layer.getFeatures(self.request):
             picture_ids.append(feature.attributes()[2])
-
         return picture_ids
 
     def get_mappoint(self, pic_id):
@@ -96,12 +111,12 @@ class SelectRectanglePicLayer:
         return None
 
 
-class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
-    def __init__(self, canvas, years_selected):
+class SelectMapTool(QgsMapToolEmitPoint):
+    def __init__(self, canvas, years_selected, geo_info):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
-        self.select_rect_pic = SelectRectanglePicLayer(years_selected)
+        self.filtered_pic_layer = SelectFilterPictureLayer(years_selected, geo_info)
 
         self.rubberBand = QgsRubberBand(self.canvas)
         self.rubberBand.setColor(QtGui.QColorConstants.Blue)
@@ -117,9 +132,7 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.isEmittingPoint = False
         self.rubberBand.reset()
         self.pic_id = None
-        if self.marker is not None:
-            self.canvas.scene().removeItem(self.marker)
-            self.marker = None
+        self.canvas.scene().removeItem(self.marker)
 
         if self.pic_show:
             self.pic_show.cntr_quit()
@@ -134,10 +147,9 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
     def canvasReleaseEvent(self, e):
         self.isEmittingPoint = False
-        pic_ids = self.select_rect_pic.select_pics_in_rectangle(
+        pic_ids = self.filtered_pic_layer.select_pics_in_rectangle(
             self.start_point, self.end_point
         )
-
         if pic_ids:
             self.pic_show = PictureShow(mode=Mode.Multi)
             self.pic_show.selected_id_changed.connect(self.show_marker)
@@ -163,11 +175,9 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
         self.rubberBand.show()
 
     def show_marker(self, _id):
-        point = self.select_rect_pic.get_mappoint(_id)
+        point = self.filtered_pic_layer.get_mappoint(_id)
         if point:
-            if self.marker is not None:
-                self.canvas.scene().removeItem(self.marker)
-                self.marker = None
+            self.canvas.scene().removeItem(self.marker)
             self.marker = QgsVertexMarker(self.canvas)
             self.marker.setColor(QtGui.QColorConstants.Yellow)
             self.marker.setIconSize(6)  # or ICON_BOX, ICON_X
@@ -181,102 +191,67 @@ class SelectRectanglePicMapTool(QgsMapToolEmitPoint):
 
 
 class PictureSelect:
-
     def __init__(self, iface):
         self.iface = iface
-        self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
-
-        self.actions = []
+        self.canvas = self.iface.mapCanvas()
         self.menu = self.tr("&Picture Select")
+        self.plugin_dir = Path(__file__).parent
+        self.action = None
         self.first_start = None
         self.select_pic = None
         self.years_selection = {year: True for year in year_range}
+        self.geo_info = {geo_info: "" for geo_info in GEO_ITEMS}
+
+    def initGui(self):
+        icon_path = self.plugin_dir / "resources/images/icon.png"
+        self.action = QAction(
+            QIcon(str(icon_path)), self.tr("Picture Select"), self.iface.mainWindow()
+        )
+        self.action.triggered.connect(self.run)
+        self.action.setEnabled(True)
+        self.action.setCheckable(True)
+        self.action.setStatusTip("Select pictures ...")
+        self.iface.addToolBarIcon(self.action)
+        self.iface.addPluginToMenu(self.menu, self.action)
+        self.first_start = True
 
     def tr(self, message):
         return QCoreApplication.translate("PictureSelect", message)
 
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        checkable=True,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None,
-    ):
-
-        icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
-        action.triggered.connect(callback)
-        action.setEnabled(enabled_flag)
-
-        if checkable:
-            action.setCheckable(True)
-
-        if status_tip is not None:
-            action.setStatusTip(status_tip)
-
-        if whats_this is not None:
-            action.setWhatsThis(whats_this)
-
-        if add_to_toolbar:
-            self.iface.addToolBarIcon(action)
-
-        if add_to_menu:
-            self.iface.addPluginToMenu(self.menu, action)
-
-        self.actions.append(action)
-
-        return action
-
-    def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, "resources", "images", "icon.png")
-        self.add_action(
-            icon_path,
-            text=self.tr("Picture Select"),
-            callback=self.run,
-            parent=self.iface.mainWindow(),
-        )
-
-        self.first_start = True
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-        for action in self.actions:
-            self.iface.removePluginMenu(self.tr("&Picture Select"), action)
-            self.iface.removeToolBarIcon(action)
+        self.iface.removePluginMenu(self.tr("&Picture Select"), self.action)
+        self.iface.removeToolBarIcon(self.action)
 
     def run(self):
-        try:
-            self.select_pic.deactivate()
-
-        except AttributeError:
-            pass
-
         result = False
         if self.first_start:
             self.first_start = False
             dlg = PictureSelectDialog()
             for year, val in self.years_selection.items():
                 getattr(dlg, f"cb_{year}").setChecked(val)
+            for geo_item, val in self.geo_info.items():
+                getattr(dlg, f"le_{geo_item}").setText(val)
             dlg.show()
             result = dlg.exec()
+            dlg.close()
 
         if result:
             for year in self.years_selection:
                 self.years_selection[year] = getattr(dlg, f"cb_{year}").isChecked()
-            dlg.close()
+            for geo_item in GEO_ITEMS:
+                self.geo_info[geo_item] = getattr(dlg, f"le_{geo_item}").text()
 
-        if self.actions[0].isChecked():
-            canvas = self.iface.mapCanvas()
-            self.select_pic = SelectRectanglePicMapTool(canvas, self.years_selection)
-            canvas.setMapTool(self.select_pic)
+        if self.action.isChecked():
+            self.select_pic = SelectMapTool(
+                self.canvas, self.years_selection, self.geo_info
+            )
+            self.canvas.setMapTool(self.select_pic)
 
         else:
-            self.select_pic.deactivate()
-            self.iface.mapCanvas().unsetMapTool(self.select_pic)
+            try:
+                self.select_pic.deactivate()
+            except AttributeError:
+                pass
+            self.canvas.unsetMapTool(self.select_pic)
             self.first_start = True

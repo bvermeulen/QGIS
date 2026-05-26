@@ -17,8 +17,8 @@ from .picture_db import PictureDb
 
 anticlockwise_symbol = "\u21b6"
 clockwise_symbol = "\u21b7"
-right_arrow_symbol = "\u25b6"
-left_arrow_symbol = "\u25c0"
+right_arrow_symbol = "\u25B6"
+left_arrow_symbol = "\u25C0"
 border_style = "margin:2px; " "padding:2px 5px; " "border:1px solid black; "
 
 
@@ -153,7 +153,6 @@ class PictureShow(QWidget):
         if self.mode == Mode.Multi:
             QShortcut(Qt.Key.Key_Left, self, self.cntr_prev)
             QShortcut(Qt.Key.Key_Right, self, self.cntr_next)
-
         QShortcut(Qt.Key.Key_Space, self, self.rotate_clockwise)
 
         self.move(400, 300)

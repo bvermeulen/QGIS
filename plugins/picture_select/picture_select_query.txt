@@ -1,0 +1,27 @@
+# SQL QUERY to be included in QGIS Postgresql database handler
+
+SELECT
+	id,
+	picture_id,
+	year,
+	i->>'country' as countries,
+	i->>'state' as "states",
+	i->>'province' as provinces,
+	i->>'city' as cities,
+	i->>'municipality' as municipalities,
+	i->>'town' as towns,
+	i->>'village' as villages,
+	i->>'suburb' as suburbs,
+	i->>'road' as roads,
+	geom
+FROM (
+	SELECT
+        locations.id,
+        locations.picture_id as picture_id,
+        extract(year from pictures.date_picture) as year,
+        geolocation_info as i,
+        geom
+	FROM
+        pictures JOIN locations on pictures.id = locations.picture_id
+        ORDER BY pictures.date_picture
+    )
