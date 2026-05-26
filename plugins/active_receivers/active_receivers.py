@@ -61,31 +61,36 @@ AZIMUTH = 0.0  # degrees [0 .. 360]
 OFFSET_INLINE = 1000  # meters
 OFFSET_CROSSLINE = 500  # meters
 CHECKBOX_CIRCLE = False
+CHECKBOX_GEOCENTRIC = False
 CIRCLE_STEPS = 50
+RAD2DEG = 180.0 / np.pi
 
 
 class CalcMap:
 
-    def __init__(self, canvas, azimuth, inline, crossline):
+    def __init__(
+        self, canvas, azimuth: float, inline: float, crossline: float, geocentric: bool
+    ):
         self.canvas = canvas
         self.azimuth = azimuth * np.pi / 180
         self.inline_offset = inline
         self.crossline_offset = crossline
+        self.geocentric = geocentric
         self.csr_canvas = QgsCoordinateReferenceSystem(
             self.canvas.mapSettings().destinationCrs().authid()
         )
+        self.ellipsoid_canvas = self.csr_canvas.ellipsoidAcronym()
         self.diagonal = np.sqrt(
             self.inline_offset * self.inline_offset
             + self.crossline_offset * self.crossline_offset
         )
-        self.da = QgsDistanceArea()
-        self.da.setEllipsoid(QgsProject.instance().ellipsoid())
         csr_wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+        self.ellipsoid_wgs84 = csr_wgs84.ellipsoidAcronym()
         self.transform_to_wgs84 = QgsCoordinateTransform(
-            self.csr_canvas, csr_wgs84, QgsProject.instance()
+            self.csr_canvas, csr_wgs84, QgsProject.instance().transformContext()
         )
         self.transform_to_canvas = QgsCoordinateTransform(
-            csr_wgs84, self.csr_canvas, QgsProject.instance()
+            csr_wgs84, self.csr_canvas, QgsProject.instance().transformContext()
         )
 
     def get_bearing(self, corner_type: str, radial: float = 0) -> float:
@@ -110,23 +115,70 @@ class CalcMap:
 
         return bearing + self.azimuth
 
-    def create_point(
-        self, point: QgsPointXY, corner_type: str, diagonal: float, radial: float = 0
-    ) -> QgsPointXY:
+    def test(self, point):
+        da = QgsDistanceArea()
+        da.setEllipsoid(self.ellipsoid_wgs84)
+
         if self.csr_canvas.isGeographic():
             point_wgs84 = point
 
         else:
             point_wgs84 = self.transform_to_wgs84.transform(point)
 
-        bearing = self.get_bearing(corner_type, radial=radial)
-        pointxy = self.da.measureLineProjected(point_wgs84, diagonal, bearing)[1]
+        test_bar = 10_000
+        bearing = 0
+        result1 = da.measureLineProjected(point_wgs84, test_bar, bearing)
+
+        test_bar = 5_000
+        bearing = 90 / RAD2DEG
+        result2 = da.measureLineProjected(point_wgs84, test_bar, bearing)
 
         if self.csr_canvas.isGeographic():
-            return pointxy
+            a = result1[1]
+            b = result2[1]
 
         else:
-            return self.transform_to_canvas.transform(pointxy)
+            a = self.transform_to_canvas.transform(result1[1])
+            b = self.transform_to_canvas.transform(result2[1])
+
+        print(f"{a.x()=:.2f}, {a.y()=:.2f}")
+        print(f"{b.x()=:.2f}, {b.y()=:.2f}")
+        print(f"{point.x()=:.2f}, {point.y()=:.2f}")
+        da.setSourceCrs(self.csr_canvas, QgsProject.instance().transformContext())
+        da.setEllipsoid(self.ellipsoid_canvas)
+        print(f"{da.measureLine(point, a):.1f}")
+        print(f"{da.measureLine(point, b):.1f}")
+
+    def create_point(
+        self, point: QgsPointXY, corner_type: str, diagonal: float, radial: float = 0
+    ) -> QgsPointXY:
+        if self.geocentric or self.csr_canvas.isGeographic():
+            da = QgsDistanceArea()
+            da.setEllipsoid(self.ellipsoid_wgs84)
+
+            if self.csr_canvas.isGeographic():
+                point_wgs84 = point
+
+            else:
+                point_wgs84 = self.transform_to_wgs84.transform(point)
+
+            bearing = self.get_bearing(corner_type, radial=radial)
+            pointxy = da.measureLineProjected(point_wgs84, diagonal, bearing)[1]
+
+            if self.csr_canvas.isGeographic():
+                return pointxy
+
+            else:
+                return self.transform_to_canvas.transform(pointxy)
+
+        else:
+            # simple cartesian distance - no transformation
+            da = QgsDistanceArea()
+            da.setSourceCrs(self.csr_canvas, QgsProject.instance().transformContext())
+            da.setEllipsoid("NONE") # self.ellipsoid_canvas)
+            bearing = self.get_bearing(corner_type, radial=radial) * RAD2DEG
+            pointxy = da.measureLineProjected(point, diagonal, bearing)[1]
+            return pointxy
 
     def add_rectangle(self, point: QgsPointXY) -> tuple[QgsPointXY]:
         """create 4 corner coordinates based on inline and crossline distances"""
@@ -150,15 +202,14 @@ class CalcMap:
 
 
 class ActivePatchMapTool(QgsMapToolEmitPoint):
-    def __init__(self, canvas, azimuth, inline, crossline, checkbox_circle):
+    def __init__(
+        self, canvas, azimuth, inline, crossline, checkbox_circle, checkbox_geocentric
+    ):
         self.canvas = canvas
         self.checkbox_circle = checkbox_circle
         self.inline = inline
         self.cm = CalcMap(
-            self.canvas,
-            azimuth,
-            self.inline,
-            crossline,
+            self.canvas, azimuth, self.inline, crossline, checkbox_geocentric
         )
         QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.rectangle = None
@@ -209,6 +260,14 @@ class ActivePatchMapTool(QgsMapToolEmitPoint):
         self.rectangle.addPoint(p3, False)
         self.rectangle.addPoint(p4, True)  # true to update canvas
         self.rectangle.show()
+        self.cm.test(point)
+        da = QgsDistanceArea()
+        da.setSourceCrs(self.cm.csr_canvas, QgsProject.instance().transformContext())
+        da.setEllipsoid(self.cm.ellipsoid_canvas)
+        print(f"{da.measureLine(p1, p2) * 1e-3:.1f}")
+        print(f"{da.measureLine(p2, p3) * 1e-3:.1f}")
+        print(f"{da.measureLine(p3, p4) * 1e-3:.1f}")
+        print(f"{da.measureLine(p4, p1) * 1e-3:.1f}\n")
 
     def show_circle(self, point: QgsPointXY):
         points = self.cm.add_circle(point)
@@ -244,6 +303,7 @@ class ActiveReceivers:
         self.inline_offset = OFFSET_INLINE
         self.crossline_offset = OFFSET_CROSSLINE
         self.checkbox_circle = CHECKBOX_CIRCLE
+        self.checkbox_geocentric = CHECKBOX_GEOCENTRIC
 
     def tr(self, message):
         return QCoreApplication.translate("ActiveReceivers", message)
@@ -313,6 +373,7 @@ class ActiveReceivers:
             dlg.lineEdit_inline.setText(str(self.inline_offset))
             dlg.lineEdit_crossline.setText(str(self.crossline_offset))
             dlg.checkBox_circle.setChecked(self.checkbox_circle)
+            dlg.checkBox_geocentric.setChecked(self.checkbox_geocentric)
             dlg.show()
             result = dlg.exec_()
 
@@ -321,6 +382,7 @@ class ActiveReceivers:
             self.inline_offset = float(dlg.lineEdit_inline.text())
             self.crossline_offset = float(dlg.lineEdit_crossline.text())
             self.checkbox_circle = dlg.checkBox_circle.isChecked()
+            self.checkbox_geocentric = dlg.checkBox_geocentric.isChecked()
             dlg.close()
 
         if self.actions[0].isChecked():
@@ -331,6 +393,7 @@ class ActiveReceivers:
                 self.inline_offset,
                 self.crossline_offset,
                 self.checkbox_circle,
+                self.checkbox_geocentric,
             )
             canvas.setMapTool(self.patch)
 
