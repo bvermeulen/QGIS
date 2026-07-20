@@ -1,0 +1,11 @@
+{ 
+    "bin_files_stem": "d:/data/sps_phase1_final",
+    "azimuth": 90, 
+    "easting": 701692.00, 
+    "northing": 3450142.50,
+    "bin_sp_int": -25.0,
+    "bin_rp_int": 12.5,
+    "nb_bin_sp": 780,
+    "nb_bin_rp": 1280,
+    "epsg": 32638
+}
