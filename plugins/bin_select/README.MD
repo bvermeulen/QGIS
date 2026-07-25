@@ -6,3 +6,5 @@ By pressing the button "Bin traces" this will bin traces using the selected offs
 
 
 ![til](./binning_clipchamp.gif)
+
+The data is stored in a SQLite database with tables bins and traces. To create this database from SPS (R, S, X) files, this is done using the app in the repsoitory [binning_cpp](https://github.com/bvermeulen/binning_cpp).  
