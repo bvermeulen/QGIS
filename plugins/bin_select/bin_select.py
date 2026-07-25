@@ -19,6 +19,7 @@ from qgis.core import (
     QgsSpatialIndex,
     QgsPointXY,
     QgsDataSourceUri,
+    QgsClassificationFixedInterval,
 )
 from qgis.gui import (
     QgsMapToolEmitPoint,
@@ -37,6 +38,7 @@ class SelectBin:
     def __init__(self, active_layer):
         self.layer = active_layer
         self.spatial_index = QgsSpatialIndex(self.layer.getFeatures())
+        self.bin_attr_window = None
 
     def select_show_bin_attr(self, search_point: QgsPointXY) -> tuple[str, any]:
         select_bin_id = self.spatial_index.nearestNeighbor(search_point, neighbors=1)
@@ -48,13 +50,19 @@ class SelectBin:
 
         if bin_id:
             dbname = QgsDataSourceUri(self.layer.source()).database()
-            bin_attributes = BinAttributesView(dbname, bin_id)
-            return bin_id, bin_attributes.selected_bin_changed
+            self.bin_attr_window = BinAttributesView(dbname, bin_id)
+            return bin_id, self.bin_attr_window.selected_bin_changed
+
+    def close_attr_window(self):
+        if self.bin_attr_window:
+            self.bin_attr_window.quit()
 
 
 class SelectMapTool(QgsMapToolEmitPoint):
-    def __init__(self, canvas, active_layer):
-        self.canvas = canvas
+    def __init__(self, iface, active_layer):
+        self.iface = iface
+        self.layer = active_layer
+        self.canvas = iface.mapCanvas()
         QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.bin_select = SelectBin(active_layer)
         self.pressed_point = None
@@ -78,6 +86,17 @@ class SelectMapTool(QgsMapToolEmitPoint):
         if changed_bin_val == "quit":
             self.remove_marker()
 
+        elif changed_bin_val == "new_bin":
+            renderer = self.layer.renderer()
+            method = QgsClassificationFixedInterval()
+            method.setParameterValues({"INTERVAL": 3.0})
+            method.setLabelPrecision(0)
+            renderer.setClassificationMethod(method)
+            self.layer.setRenderer(renderer)
+            renderer.updateClasses(self.layer, 0)
+            renderer.updateColorRamp()
+            self.layer.triggerRepaint()
+
         else:
             easting, northing = [float(v) for v in changed_bin_val.split(",")]
             self.pressed_point = QgsPointXY(easting, northing)
@@ -96,6 +115,7 @@ class SelectMapTool(QgsMapToolEmitPoint):
 
     def deactivate(self):
         self.remove_marker()
+        self.bin_select.close_attr_window()
 
 
 class BinSelect:
@@ -128,25 +148,25 @@ class BinSelect:
 
     def run(self):
         result = False
-        bin_layer = None
         if self.first_start:
+            self.smt = None
+            bin_layer = None
             self.first_start = False
             dlg = BinSelectDialog()
             dlg.show()
             result = dlg.exec_()
+            bin_layer = dlg.get_selected_layer()
             dlg.close()
 
         if result:
-            bin_layer = dlg.get_selected_layer()
             if self.action.isChecked() and bin_layer:
-                self.smt = SelectMapTool(self.canvas, bin_layer)
+                self.smt = SelectMapTool(self.iface, bin_layer)
                 self.canvas.setMapTool(self.smt)
 
         else:
-            try:
+            if self.smt:
                 self.smt.deactivate()
                 self.canvas.unsetMapTool(self.smt)
-            except AttributeError:
-                pass
+
             self.action.setChecked(False)
             self.first_start = True

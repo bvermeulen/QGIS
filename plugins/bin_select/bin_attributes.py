@@ -8,46 +8,31 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.ticker as ticker
+from .db_tools import DbTools
 from windrose import WindroseAxes
 
 DEG2RAD = np.pi / 180.0
 PLOT_BINS_WIDTH = 1 / 5
 NSECTORS = 16
-MAX_OFFSET = 2500
-SRC_INDEXES = [1, 2]
 OFFSET_MARGIN = 1.2
-FIGSIZE = (7,7)
-
-
-def read_config(config_file: Path) -> dict:
-    with open(config_file, "rt") as jsf:
-        config = json.load(jsf)
-        config["azimuth"] *= DEG2RAD
-    return config
+FIGSIZE = (7, 7)
 
 
 class BinAttributes:
 
     def __init__(
         self,
-        bin_files_stem: str,
+        db_file: Path,
         center_bin: tuple[int, int],
         src_indexes: list[int],
         max_offset: float,
     ) -> pd.DataFrame:
-        db_file = "sqlite:///" + bin_files_stem + ".sqlite"
-        self.engine = create_engine(db_file)
+        self.engine = create_engine(f"sqlite:///{str(db_file)}")
         self.table = "traces"
         self.center_bin = center_bin
         self.src_indexes = src_indexes
         self.max_offset = max_offset
-        self.bins_df = np.empty(
-            (
-                3,
-                3,
-            ),
-            dtype=object,
-        )
+        self.bins_df = np.empty((3, 3), dtype=object)
         self.get_surrounding_bins()
 
     def __del__(self):
@@ -223,11 +208,14 @@ class BinAttributes:
 
 
 def main(argv: list):
-    config_file = Path("./config.json") if len(argv) != 2 else Path(argv[1])
-    config = read_config(config_file)
-    bin_files_stem = config["bin_files_stem"]
+    if len(argv) != 2:
+        print("Provide the bins database file as argument!")
+        sys.exit()
+
+    db_file = Path(argv[1])
+    config = DbTools(db_file).get_config_from_db()
     center_bin = np.array([502, 675], dtype=int)
-    ba = BinAttributes(bin_files_stem, center_bin, SRC_INDEXES, MAX_OFFSET)
+    ba = BinAttributes(db_file, center_bin, config["offset"], config["src_indexes"])
     ba.diagram(ba.setup_plot_polar, ba.plot_rose)
     ba.diagram(ba.setup_plot_cartesian, ba.plot_offset)
     ba.diagram(ba.setup_plot_cartesian, ba.plot_spider)
