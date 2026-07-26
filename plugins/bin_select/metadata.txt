@@ -1,0 +1,26 @@
+[general]
+name=bin_select
+about=Select and bin traces
+category=Plugins
+hasProcessingProvider=False
+description=Select nearest bin and show attributes in a seperate window; option to bin traces with selected offset and src_indexes
+icon=resources/images/icon.png
+tags=plugin,binning, seismic,builder
+
+author=Bruno Vermeulen
+email=bruno.vermeulen@hotmail.com
+homepage=https://github.com/bvermeulen
+repository=https://github.com/bvermeulen/QGIS/tree/posix_qgis4/plugins/bin_select
+tracker=
+
+deprecated=False
+experimental=True
+plugin_dependencies=
+qgisMinimumVersion=4.00
+qgisMaximumVersion=4.99
+supportsQt6=True
+
+version=1.0.0
+changelog=
+  Version 1.0.0:
+    - Initial public release generated with Plugin Builder Enterprise.
