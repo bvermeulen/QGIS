@@ -2,6 +2,7 @@ from pathlib import Path
 import sqlite3
 from functools import wraps
 
+
 def db_connect(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -77,30 +78,20 @@ class DbTools:
 
     @db_connect
     def clear_bins(self, cursor):
-        sql_string = (
-            "UPDATE bins SET bin_count = null;"
-        )
+        sql_string = "UPDATE bins SET bin_count = null;"
         cursor.execute(sql_string)
 
     @db_connect
     def bin_traces(self, offset, indexes, cursor):
         sql_string = (
             "UPDATE bins SET bin_count = bc FROM "
-	        "(SELECT bin_sp, bin_rp, count(*) AS bc "
-		    "FROM traces tr NOT INDEXED "
-			"WHERE "
-			"tr.offset >= 0 AND tr.offset < ? AND "
-			"tr.src_index IN (?) "
-			"GROUP BY tr.bin_sp, tr.bin_rp"
-	        ") AS bins_grouped "
+            "(SELECT bin_sp, bin_rp, count(*) AS bc "
+            "FROM traces tr NOT INDEXED "
+            "WHERE "
+            "tr.offset >= 0 AND tr.offset < ? AND "
+            f"tr.src_index IN ({", ".join(["?" for _ in indexes])}) "
+            "GROUP BY tr.bin_sp, tr.bin_rp"
+            ") AS bins_grouped "
             "WHERE bins.bin_sp = bins_grouped.bin_sp and bins.bin_rp = bins_grouped.bin_rp;"
         )
-        indexes_str = ",".join([str(i) for i in indexes])
-        cursor.execute(sql_string, (offset, indexes_str))
-
-
-
-
-
-
-
+        cursor.execute(sql_string, (offset, *indexes))
