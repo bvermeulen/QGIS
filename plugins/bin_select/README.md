@@ -1,14 +1,14 @@
 # active_receiver
 
-Shows extent of the area for the active receivers with the source location in the center
+Selects the nearest bin, pops up another window for fold, rose and spider diagrams. Pressing bin traces creates a fold plot.
 
 ## About
-A little tool for seismic acquisition
+Another little QGIS tool for seismic acquisition
 
 ## Author
 Bruno Vermeulen <bruno.vermeulen@hotmail.com>
 
 ## Repository
-- Homepage: 
-- Repository: 
-- Tracker: 
+- Homepage:
+- Repository: https://github.com/bvermeulen/QGIS/tree/posix_qgis4/plugins/bin_select
+- Tracker:
