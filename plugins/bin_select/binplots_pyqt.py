@@ -5,17 +5,20 @@ email: bvermeulen@hotmail.com
 admin@howdiweb.nl
 """
 
+FIGSIZE_PYQT_PLOT = (6.3125, 5.833)
+
 import time
 import datetime
+import numpy as np
 from functools import partial
 import warnings
 from pathlib import Path
 from qgis.PyQt.QtCore import QThread, pyqtSignal
 from qgis.PyQt import uic, QtWidgets
 import matplotlib
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from .db_tools import DbTools
-from .bin_attributes import BinAttributes
+from .bin_attributes import BinAttributes, PlotOffset, PlotSpider, PlotRose
 
 matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -47,7 +50,7 @@ button_style_active = """
 class BinningThread(QThread):
     binning_finished = pyqtSignal()
 
-    def __init__(self, db_tools, offset, src_indexes):
+    def __init__(self, db_tools: DbTools, offset: float, src_indexes: list[int, int]):
         super().__init__()
         self.db_tools = db_tools
         self.offset = offset
@@ -60,7 +63,7 @@ class BinningThread(QThread):
 
 
 class MplCanvas(FigureCanvas):
-    def __init__(self, fig):
+    def __init__(self, fig: matplotlib.figure.Figure):
         super().__init__(fig)
 
 
@@ -69,7 +72,7 @@ class BinAttributesView(QtWidgets.QMainWindow):
 
     selected_bin_changed = pyqtSignal(str)
 
-    def __init__(self, db_filename, bin_id, *args, **kwargs):
+    def __init__(self, db_filename: str, bin_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi(Path(__file__).parent / "binning_plots.ui", self)
         self.db_filename = Path(db_filename)
@@ -139,8 +142,10 @@ class BinAttributesView(QtWidgets.QMainWindow):
             f"{", ".join(str(i) for i in self.config["src_indexes"])}"
         )
         self.LineEdit_07.setText(f"{int(self.config["offset"])}")
-        self.figure_dict = {}
         self.center_bin_name = ""
+        self.bins_df = np.array([])
+        self.offset = None
+        self.src_indexes = []
 
     def select_bin(self):
         bin = self.LineEdit_01.text()
@@ -156,49 +161,66 @@ class BinAttributesView(QtWidgets.QMainWindow):
 
         indexes = self.LineEdit_06.text()
         for delimeter in ["/", ",", ";"]:
-            indexes = indexes.replace(delimeter, " ")
+            self.src_indexes = indexes.replace(delimeter, " ")
         try:
-            indexes = [int(v) for v in indexes.split()]
-            if not indexes or not all(v > 0 for v in indexes):
+            self.src_indexes = [int(v) for v in indexes.split()]
+            if not self.src_indexes or not all(v > 0 for v in self.src_indexes):
                 raise ValueError("all indexes must be positive")
 
         except ValueError:
             return
 
-        max_offset = self.LineEdit_07.text()
+        offset = self.LineEdit_07.text()
         try:
-            max_offset = float(max_offset)
-            if not (max_offset > 0):
-                raise ValueError("max offset must be zero orpositive")
+            self.offset = float(offset)
+            if not (self.offset > 0):
+                raise ValueError("max offset must be zero or positive")
 
         except ValueError:
             return
 
         self.center_bin_name = f"{bin_src}_{bin_rcv}"
-        ba = BinAttributes(self.db_filename, (bin_src, bin_rcv), indexes, max_offset)
-        bin_line, bin_point, easting, northing, traces = ba.calc_bin_values(0, 0)
+        ba = BinAttributes(
+            self.db_filename, (bin_src, bin_rcv), self.offset, self.src_indexes
+        )
+        self.bins_df = ba.get_surrounding_bins()
+        self.update_attribute_figs()
+        self.db_tools.update_seis_config("offset", str(self.offset))
+        self.db_tools.update_seis_config(
+            "src_indexes", f"{", ".join(str(i) for i in self.src_indexes)}"
+        )
+        del ba
+
+    def update_attribute_figs(self):
+        if self.bins_df.size == 0:
+            return
+
+        width = self.PlotFrame.width() / self.PlotFrame.logicalDpiX()
+        height = self.PlotFrame.height() / self.PlotFrame.logicalDpiY()
+        figsize = (width, height) if height > 1 else FIGSIZE_PYQT_PLOT
+        plot_offset = PlotOffset(self.bins_df, figsize)
+        plot_spider = PlotSpider(self.bins_df, self.offset, figsize)
+        plot_rose = PlotRose(self.bins_df, self.offset, figsize)
+        bin_line, bin_point, easting, northing, traces = plot_offset.calc_bin_values(
+            0, 0
+        )
         self.LineEdit_02.setText(f"{easting:.0f}")
         self.LineEdit_03.setText(f"{northing:.0f}")
         self.LineEdit_04.setText(f"{bin_line}/ {bin_point}")
         self.LineEdit_05.setText(f"{traces}")
-        self.LineEdit_06.setText(f"{", ".join(str(i) for i in indexes)}")
-        self.LineEdit_07.setText(f"{int(max_offset)}")
-        self.figure_dict["Offset"] = ba.diagram(ba.setup_plot_cartesian, ba.plot_offset)
-        self.figure_dict["Spider"] = ba.diagram(ba.setup_plot_cartesian, ba.plot_spider)
-        self.figure_dict["Rose"] = ba.diagram(ba.setup_plot_polar, ba.plot_rose)
-        self.update_canvas_data(self.figure_dict)
-        bin_loc_str = ", ".join([str(easting), str(northing)])
-        self.selected_bin_changed.emit(bin_loc_str)
+        self.LineEdit_06.setText(f"{", ".join(str(i) for i in self.src_indexes)}")
+        self.LineEdit_07.setText(f"{int(self.offset)}")
+        figure_dict = {}
+        figure_dict["Offset"] = plot_offset.diagram()
+        figure_dict["Spider"] = plot_spider.diagram()
+        figure_dict["Rose"] = plot_rose.diagram()
+        self.update_canvas_data(figure_dict)
         # make sure there is destructor (__del__) to apply plt.close('all') to remove all figures
-        # and prevent deleting the instance too quickly for qgis to catch up
-        self.db_tools.update_seis_config("offset", str(max_offset))
-        self.db_tools.update_seis_config(
-            "src_indexes", f"{", ".join(str(i) for i in indexes)}"
-        )
-        time.sleep(0.5)
-        del ba
+        del plot_offset
+        del plot_spider
+        del plot_rose
 
-    def update_canvas_data(self, figure_dict):
+    def update_canvas_data(self, figure_dict: dict):
         for key, value in self.plot_dict.items():
             value["fig"] = figure_dict.get(key)
             if value["canvas"]:
@@ -219,7 +241,9 @@ class BinAttributesView(QtWidgets.QMainWindow):
         self.BinButton.setEnabled(False)
         time.sleep(0.5)
         self.config = self.db_tools.get_config_from_db()
-        self.worker = BinningThread(self.db_tools, self.config["offset"], self.config["src_indexes"])
+        self.worker = BinningThread(
+            self.db_tools, self.config["offset"], self.config["src_indexes"]
+        )
         self.worker.binning_finished.connect(self.on_bin_traces_completion)
         self.worker.start()
 
@@ -259,6 +283,10 @@ class BinAttributesView(QtWidgets.QMainWindow):
                 ]
             )
             fig.savefig(file_name)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_attribute_figs()
 
     def closeEvent(self, event):
         self.selected_bin_changed.emit("quit")
