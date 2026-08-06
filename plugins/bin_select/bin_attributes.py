@@ -271,7 +271,7 @@ class PlotSpider(Plot):
 
 
 class PlotRose(Plot):
-    def __init__(self, bins_df: np.array, offset: float, figsize: float[int, int]):
+    def __init__(self, bins_df: np.array, offset: float, figsize: tuple[int, int]):
         super().__init__(bins_df)
         self.offset = offset
         self.setup_plot_polar(figsize)

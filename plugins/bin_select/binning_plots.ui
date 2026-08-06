@@ -66,10 +66,10 @@
        <string notr="true">background-color:#F0F0F0</string>
       </property>
       <property name="frameShape">
-       <enum>QFrame::Shape::Box</enum>
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
+       <enum>QFrame::Plain</enum>
       </property>
       <property name="lineWidth">
        <number>1</number>
@@ -250,10 +250,10 @@
        <string notr="true">background-color: #F0F0F0</string>
       </property>
       <property name="frameShape">
-       <enum>QFrame::Shape::Box</enum>
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
+       <enum>QFrame::Plain</enum>
       </property>
       <property name="lineWidth">
        <number>1</number>
@@ -272,9 +272,6 @@
        </property>
        <property name="title">
         <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
        </property>
        <layout class="QVBoxLayout" name="PlotTypeLayout">
         <property name="spacing">
@@ -358,9 +355,6 @@
        </property>
        <property name="title">
         <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
        </property>
        <widget class="QLineEdit" name="LineEdit_06">
         <property name="geometry">
