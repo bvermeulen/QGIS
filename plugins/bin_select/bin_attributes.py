@@ -1,5 +1,4 @@
 import sys
-import json
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -96,8 +95,7 @@ class Plot:
 
         ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
         ax.yaxis.set_major_locator(ticker.MaxNLocator(5))
-        self.update_text_label_sizes()
-        self.update_legend()
+        self.set_text_label_sizes()
 
     def setup_plot_polar(self, figsize: tuple[int, int]) -> None:
         self.fig, axes_cartesian = plt.subplots(
@@ -127,8 +125,8 @@ class Plot:
 
         self.axes = np.array(axes).reshape(3, 3)
 
-        self.update_text_label_sizes()
-        self.update_legend()
+        self.set_text_label_sizes()
+        self.set_legend()
 
     def get_scale(self) -> float:
         if self.fig is None:
@@ -137,7 +135,7 @@ class Plot:
         width, height = self.fig.get_size_inches()
         return min(width / FIGSIZE[0], height / FIGSIZE[1])
 
-    def update_text_label_sizes(self) -> None:
+    def set_text_label_sizes(self) -> None:
         scale = self.get_scale()
         size = max(MIN_TEXT, scale * BASE_FONTSIZE)
         for i, ax in enumerate(np.array(self.axes).flat):
@@ -150,22 +148,20 @@ class Plot:
             for text in self.legend.get_texts():
                 text.set_fontsize(size)
 
-    def update_legend(self) -> None:
+    def set_legend(self) -> None:
         if not self.legend:
             return
 
-        scale = self.get_scale()
-        if scale > LEGEND_VISIBLE_SCALE:
+        if (scale := self.get_scale()) > LEGEND_VISIBLE_SCALE:
             self.legend.set_visible(True)
+            self.legend.set_bbox_to_anchor((LEGEND_X, LEGEND_Y / scale))
 
         else:
             self.legend.set_visible(False)
 
-        self.legend.set_bbox_to_anchor((LEGEND_X, LEGEND_Y / scale))
-
     def on_resize(self, event=None) -> None:
-        self.update_text_label_sizes()
-        self.update_legend()
+        self.set_text_label_sizes()
+        self.set_legend()
         self.fig.canvas.draw_idle()
 
     def plot_diagram(self, plot_fn) -> mpl.figure.Figure:
@@ -199,8 +195,6 @@ class Plot:
 
 class PlotOffset(Plot):
     def __init__(self, bins_df: np.array, fig_size: tuple[int, int]):
-        self.fig = None
-        self.axes = []
         super().__init__(bins_df)
         self.setup_plot_cartesian(fig_size)
 
@@ -218,7 +212,7 @@ class PlotOffset(Plot):
         traces = np.arange(1, len(offsets) + 1, 1)
         self.axes[1 + i, 1 + j].bar(traces, offsets)
         self.axes[1 + i, 1 + j].text(
-            -0.02 * traces[-1],
+            0.02 * traces[-1],
             0.88 * offsets[-1],
             bin_text,
             size=BASE_FONTSIZE,
@@ -234,8 +228,6 @@ class PlotSpider(Plot):
     def __init__(self, bins_df: np.array, offset: float, figsize: tuple[int, int]):
         super().__init__(bins_df)
         self.offset = offset
-        self.fig = None
-        self.axes = []
         self.setup_plot_cartesian(figsize)
 
     def __del__(self):
@@ -282,8 +274,6 @@ class PlotRose(Plot):
     def __init__(self, bins_df: np.array, offset: float, figsize: float[int, int]):
         super().__init__(bins_df)
         self.offset = offset
-        self.fig = None
-        self.axes = []
         self.setup_plot_polar(figsize)
 
     def __del__(self):
@@ -311,7 +301,7 @@ class PlotRose(Plot):
             ha="left",
             va="bottom",
         )
-        self.axes[i + 1][j + 1].bar(
+        self.axes[1 + i][1 + j].bar(
             azimuths,
             offsets,
             bins=np.arange(0, self.offset, int(self.offset * PLOT_BINS_WIDTH)),
@@ -320,7 +310,7 @@ class PlotRose(Plot):
             edgecolor="white",
         )
         if i == 1 and j == -1:
-            self.legend = self.axes[i + 1][j + 1].legend(
+            self.legend = self.axes[1 +i][1 +j].legend(
                 bbox_to_anchor=(LEGEND_X, LEGEND_Y),
             )
 

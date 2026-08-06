@@ -5,6 +5,7 @@ email: bvermeulen@hotmail.com
 admin@howdiweb.nl
 """
 
+MOUSE_RELEASE_TRIGGER = 1000
 FIGSIZE_PYQT_PLOT = (6.3125, 5.833)
 
 import time
@@ -13,7 +14,7 @@ import numpy as np
 from functools import partial
 import warnings
 from pathlib import Path
-from qgis.PyQt.QtCore import QThread, pyqtSignal
+from qgis.PyQt.QtCore import QThread, pyqtSignal, QTimer
 from qgis.PyQt import uic, QtWidgets
 import matplotlib
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -47,6 +48,7 @@ button_style_active = """
 """
 
 
+
 class BinningThread(QThread):
     binning_finished = pyqtSignal()
 
@@ -75,38 +77,6 @@ class BinAttributesView(QtWidgets.QMainWindow):
     def __init__(self, db_filename: str, bin_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi(Path(__file__).parent / "binning_plots.ui", self)
-        self.db_filename = Path(db_filename)
-        self.bins_file_stem = self.db_filename.parent / self.db_filename.stem
-        self.db_tools = DbTools(db_filename)
-        self.config = self.db_tools.get_config_from_db()
-        self.save_folder_description = "Save to: "
-        self.ActionQuit.triggered.connect(self.quit)
-        self.ActionSaveFolder.triggered.connect(self.select_save_folder)
-        self.ActionSave.triggered.connect(partial(self.save_plots))
-        self.LineEdit_01.returnPressed.connect(self.select_bin)
-        self.LineEdit_06.returnPressed.connect(self.select_bin)
-        self.LineEdit_07.returnPressed.connect(self.select_bin)
-        self.BinButton.pressed.connect(self.bin_traces)
-        self.BinButton.setStyleSheet(button_syle)
-
-        self.plot_dict = {}
-        self.clear_vals()
-        for _, value in self.plot_dict.items():
-            value["rb"].clicked.connect(partial(self.show_plot, value["index"] - 1))
-        self.RB_Type_01.setChecked(True)
-        self.DbLabel.setText(self.bins_file_stem.name)
-        self.save_folder = self.bins_file_stem.parent / "bin_plots"
-        self.SaveFolderLabel.setText(
-            "".join([self.save_folder_description, str(self.save_folder)])
-        )
-        self.LineEdit_01.setText(bin_id)
-        self.select_bin()
-        self.show()
-
-    def clear_vals(self):
-        if self.plot_dict:
-            self.update_canvas_data({})
-
         self.plot_dict = {
             "Offset": {
                 "index": 1,
@@ -133,7 +103,32 @@ class BinAttributesView(QtWidgets.QMainWindow):
                 "fig": None,
             },
         }
-        self.LineEdit_01.setText("")
+        self.db_filename = Path(db_filename)
+        self.bins_file_stem = self.db_filename.parent / self.db_filename.stem
+        self.db_tools = DbTools(db_filename)
+        self.config = self.db_tools.get_config_from_db()
+        self.save_folder_description = "Save to: "
+        self.ActionQuit.triggered.connect(self.quit)
+        self.ActionSaveFolder.triggered.connect(self.select_save_folder)
+        self.ActionSave.triggered.connect(partial(self.save_plots))
+        self.LineEdit_01.returnPressed.connect(self.select_bin)
+        self.LineEdit_06.returnPressed.connect(self.select_bin)
+        self.LineEdit_07.returnPressed.connect(self.select_bin)
+        self.BinButton.pressed.connect(self.bin_traces)
+        self.BinButton.setStyleSheet(button_syle)
+        self.resize_timer = QTimer()
+        self.resize_timer.setSingleShot(True)
+        self.resize_timer.timeout.connect(self.handle_resize_release)
+
+        for _, value in self.plot_dict.items():
+            value["rb"].clicked.connect(partial(self.show_plot, value["index"] - 1))
+        self.RB_Type_01.setChecked(True)
+        self.DbLabel.setText(self.bins_file_stem.name)
+        self.save_folder = self.bins_file_stem.parent / "bin_plots"
+        self.SaveFolderLabel.setText(
+            "".join([self.save_folder_description, str(self.save_folder)])
+        )
+        self.LineEdit_01.setText(bin_id)
         self.LineEdit_02.setText("")
         self.LineEdit_03.setText("")
         self.LineEdit_04.setText("")
@@ -142,10 +137,9 @@ class BinAttributesView(QtWidgets.QMainWindow):
             f"{", ".join(str(i) for i in self.config["src_indexes"])}"
         )
         self.LineEdit_07.setText(f"{int(self.config["offset"])}")
-        self.center_bin_name = ""
         self.bins_df = np.array([])
-        self.offset = None
-        self.src_indexes = []
+        self.select_bin()
+        self.show()
 
     def select_bin(self):
         bin = self.LineEdit_01.text()
@@ -179,31 +173,32 @@ class BinAttributesView(QtWidgets.QMainWindow):
         except ValueError:
             return
 
-        self.center_bin_name = f"{bin_src}_{bin_rcv}"
-        ba = BinAttributes(
-            self.db_filename, (bin_src, bin_rcv), self.offset, self.src_indexes
-        )
-        self.bins_df = ba.get_surrounding_bins()
-        self.update_attribute_figs()
         self.db_tools.update_seis_config("offset", str(self.offset))
         self.db_tools.update_seis_config(
             "src_indexes", f"{", ".join(str(i) for i in self.src_indexes)}"
         )
+        self.center_bin_name = f"{bin_src}, {bin_rcv}"
+        ba = BinAttributes(
+            self.db_filename, (bin_src, bin_rcv), self.offset, self.src_indexes
+        )
+        self.bins_df = ba.get_surrounding_bins()
+        self.create_attribute_figs()
         del ba
 
-    def update_attribute_figs(self):
+    def create_attribute_figs(self):
         if self.bins_df.size == 0:
             return
 
         width = self.PlotFrame.width() / self.PlotFrame.logicalDpiX()
         height = self.PlotFrame.height() / self.PlotFrame.logicalDpiY()
         figsize = (width, height) if height > 1 else FIGSIZE_PYQT_PLOT
-        plot_offset = PlotOffset(self.bins_df, figsize)
-        plot_spider = PlotSpider(self.bins_df, self.offset, figsize)
-        plot_rose = PlotRose(self.bins_df, self.offset, figsize)
-        bin_line, bin_point, easting, northing, traces = plot_offset.calc_bin_values(
-            0, 0
+        self.plt_offset = PlotOffset(self.bins_df, figsize)
+        self.plt_spider = PlotSpider(self.bins_df, self.offset, figsize)
+        self.plt_rose = PlotRose(self.bins_df, self.offset, figsize)
+        bin_line, bin_point, easting, northing, traces = (
+            self.plt_offset.calc_bin_values(0, 0)
         )
+        self.LineEdit_01.setText(self.center_bin_name)
         self.LineEdit_02.setText(f"{easting:.0f}")
         self.LineEdit_03.setText(f"{northing:.0f}")
         self.LineEdit_04.setText(f"{bin_line}/ {bin_point}")
@@ -211,14 +206,14 @@ class BinAttributesView(QtWidgets.QMainWindow):
         self.LineEdit_06.setText(f"{", ".join(str(i) for i in self.src_indexes)}")
         self.LineEdit_07.setText(f"{int(self.offset)}")
         figure_dict = {}
-        figure_dict["Offset"] = plot_offset.diagram()
-        figure_dict["Spider"] = plot_spider.diagram()
-        figure_dict["Rose"] = plot_rose.diagram()
+        figure_dict["Offset"] = self.plt_offset.diagram()
+        figure_dict["Spider"] = self.plt_spider.diagram()
+        figure_dict["Rose"] = self.plt_rose.diagram()
         self.update_canvas_data(figure_dict)
-        # make sure there is destructor (__del__) to apply plt.close('all') to remove all figures
-        del plot_offset
-        del plot_spider
-        del plot_rose
+        self.show()
+        del self.plt_offset
+        del self.plt_spider
+        del self.plt_rose
 
     def update_canvas_data(self, figure_dict: dict):
         for key, value in self.plot_dict.items():
@@ -285,8 +280,11 @@ class BinAttributesView(QtWidgets.QMainWindow):
             fig.savefig(file_name)
 
     def resizeEvent(self, event):
+        self.resize_timer.start(MOUSE_RELEASE_TRIGGER)
         super().resizeEvent(event)
-        self.update_attribute_figs()
+
+    def handle_resize_release(self):
+        self.create_attribute_figs()
 
     def closeEvent(self, event):
         self.selected_bin_changed.emit("quit")
