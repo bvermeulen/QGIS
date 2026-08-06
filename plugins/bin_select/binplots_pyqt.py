@@ -5,7 +5,7 @@ email: bvermeulen@hotmail.com
 admin@howdiweb.nl
 """
 
-MOUSE_RELEASE_TRIGGER = 1000
+MOUSE_RELEASE_TRIGGER = 350
 FIGSIZE_PYQT_PLOT = (6.3125, 5.833)
 
 import time
