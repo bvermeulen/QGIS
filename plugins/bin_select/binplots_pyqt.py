@@ -204,7 +204,6 @@ class BinAttributesView(QtWidgets.QMainWindow):
         self.LineEdit_05.setText(f"{traces}")
         self.LineEdit_06.setText(f"{", ".join(str(i) for i in self.src_indexes)}")
         self.LineEdit_07.setText(f"{int(self.offset)}")
-        self.update_canvas_data(figure_dict)
         figure_dict = {}
         figure_dict["Offset"] = self.plt_offset.diagram()
         figure_dict["Spider"] = self.plt_spider.diagram()
