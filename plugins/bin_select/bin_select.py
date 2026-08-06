@@ -86,7 +86,7 @@ class SelectMapTool(QgsMapToolEmitPoint):
         if changed_bin_val == "quit":
             self.remove_marker()
 
-        elif changed_bin_val == "new_bin":
+        elif changed_bin_val == "new_foldplot":
             renderer = self.layer.renderer()
             method = QgsClassificationFixedInterval()
             method.setParameterValues({"INTERVAL": 3.0})
@@ -107,7 +107,7 @@ class SelectMapTool(QgsMapToolEmitPoint):
             self.remove_marker()
             self.marker = QgsVertexMarker(self.canvas)
             self.marker.setColor(Qt.yellow)
-            self.marker.setIconSize(6)  # or ICON_BOX, ICON_X
+            self.marker.setIconSize(6)
             self.marker.setIconType(QgsVertexMarker.ICON_CROSS)
             self.marker.setPenWidth(3)
             self.marker.setCenter(self.pressed_point)

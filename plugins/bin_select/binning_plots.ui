@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>904</width>
-    <height>797</height>
+    <width>792</width>
+    <height>608</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="font">
    <font>
@@ -20,164 +26,434 @@
    <string>Seisbins</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="horizontalLayoutWidget_2">
-    <property name="geometry">
-     <rect>
-      <x>720</x>
-      <y>0</y>
-      <width>171</width>
-      <height>321</height>
-     </rect>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QHBoxLayout" name="MainLayout">
+    <property name="spacing">
+     <number>2</number>
     </property>
-    <layout class="QHBoxLayout" name="ControlLayout">
-     <item>
-      <widget class="QFrame" name="ControlFrame">
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
+    <property name="leftMargin">
+     <number>2</number>
+    </property>
+    <property name="topMargin">
+     <number>2</number>
+    </property>
+    <property name="rightMargin">
+     <number>2</number>
+    </property>
+    <property name="bottomMargin">
+     <number>2</number>
+    </property>
+    <item>
+     <widget class="QFrame" name="PlotFrame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>420</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:#F0F0F0</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="midLineWidth">
+       <number>0</number>
+      </property>
+      <layout class="QVBoxLayout" name="LeftLayout" stretch="0,1">
+       <property name="spacing">
+        <number>0</number>
        </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
+       <property name="leftMargin">
+        <number>0</number>
        </property>
-       <widget class="QRadioButton" name="RB_Type_01">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>230</y>
-          <width>111</width>
-          <height>16</height>
-         </rect>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QStackedWidget" name="StackedPlots">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <widget class="QWidget" name="page_1">
+          <layout class="QVBoxLayout" name="PageLayout_01">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <layout class="QFormLayout" name="FormLayout_01">
+             <property name="horizontalSpacing">
+              <number>0</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_2">
+          <layout class="QVBoxLayout" name="PageLayout_02">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <layout class="QFormLayout" name="FormLayout_02">
+             <property name="horizontalSpacing">
+              <number>0</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_3">
+          <layout class="QVBoxLayout" name="PageLayout_03">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <layout class="QFormLayout" name="FormLayout_03">
+             <property name="horizontalSpacing">
+              <number>0</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="SaveFolderLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>15</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: white</string>
+         </property>
+         <property name="text">
+          <string>save folder</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="indent">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="ControlFrame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>180</width>
+        <height>430</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: #F0F0F0</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="midLineWidth">
+       <number>0</number>
+      </property>
+      <widget class="QGroupBox" name="PlotTypeBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>250</y>
+         <width>161</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+       </property>
+       <layout class="QVBoxLayout" name="PlotTypeLayout">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="text">
-         <string>Offset</string>
+        <property name="leftMargin">
+         <number>2</number>
         </property>
-        <property name="checked">
-         <bool>true</bool>
+        <property name="topMargin">
+         <number>2</number>
         </property>
-       </widget>
-       <widget class="QRadioButton" name="RB_Type_02">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>250</y>
-          <width>121</width>
-          <height>16</height>
-         </rect>
+        <property name="rightMargin">
+         <number>2</number>
         </property>
-        <property name="text">
-         <string>Spider</string>
+        <property name="bottomMargin">
+         <number>2</number>
         </property>
-       </widget>
-       <widget class="QRadioButton" name="RB_Type_03">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>270</y>
-          <width>121</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Rose diagram</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="LineEdit_01">
+        <item>
+         <widget class="QRadioButton" name="RB_Type_01">
+          <property name="text">
+           <string>Offset</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="RB_Type_02">
+          <property name="text">
+           <string>Spider</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="RB_Type_03">
+          <property name="text">
+           <string>Rose diagram</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QLabel" name="DbLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>350</y>
+         <width>151</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Database</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="BinButton">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>380</y>
+         <width>80</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Bin traces</string>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="EditBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>161</width>
+         <height>231</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+       </property>
+       <widget class="QLineEdit" name="LineEdit_06">
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>10</y>
-          <width>91</width>
-          <height>22</height>
+          <y>165</y>
+          <width>81</width>
+          <height>25</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="LineEdit_05">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>134</y>
+          <width>81</width>
+          <height>25</height>
          </rect>
         </property>
         <property name="readOnly">
-         <bool>false</bool>
-        </property>
-       </widget>
-       <widget class="QLabel" name="Label_01">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>49</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Bin</string>
+         <bool>true</bool>
         </property>
        </widget>
        <widget class="QLabel" name="Label_02">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>40</y>
-          <width>49</width>
-          <height>16</height>
+          <x>5</x>
+          <y>41</y>
+          <width>51</width>
+          <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Easting</string>
         </property>
        </widget>
-       <widget class="QLabel" name="Label_03">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>70</y>
-          <width>49</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Northing</string>
-        </property>
-       </widget>
        <widget class="QLabel" name="Label_04">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>100</y>
+          <x>5</x>
+          <y>103</y>
           <width>61</width>
-          <height>16</height>
+          <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Line/point</string>
         </property>
        </widget>
-       <widget class="QLineEdit" name="LineEdit_02">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>40</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
        <widget class="QLineEdit" name="LineEdit_03">
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>70</y>
-          <width>91</width>
-          <height>22</height>
+          <y>72</y>
+          <width>81</width>
+          <height>25</height>
          </rect>
         </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
        </widget>
-       <widget class="QLineEdit" name="LineEdit_04">
+       <widget class="QLabel" name="Label_03">
+        <property name="geometry">
+         <rect>
+          <x>5</x>
+          <y>72</y>
+          <width>61</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Northing</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="LineEdit_07">
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>100</y>
-          <width>91</width>
-          <height>22</height>
+          <y>196</y>
+          <width>81</width>
+          <height>25</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="LineEdit_02">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>41</y>
+          <width>81</width>
+          <height>25</height>
          </rect>
         </property>
         <property name="readOnly">
@@ -187,203 +463,93 @@
        <widget class="QLabel" name="Label_05">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>130</y>
-          <width>61</width>
-          <height>16</height>
+          <x>5</x>
+          <y>134</y>
+          <width>36</width>
+          <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Traces</string>
         </property>
        </widget>
-       <widget class="QLineEdit" name="LineEdit_05">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>130</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-       <widget class="QLabel" name="Label_06">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>160</y>
-          <width>49</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Indexes</string>
-        </property>
-       </widget>
        <widget class="QLabel" name="Label_07">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>190</y>
-          <width>49</width>
-          <height>16</height>
+          <x>5</x>
+          <y>196</y>
+          <width>36</width>
+          <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Offset</string>
         </property>
        </widget>
-       <widget class="QLineEdit" name="LineEdit_06">
+       <widget class="QLabel" name="Label_06">
         <property name="geometry">
          <rect>
-          <x>70</x>
-          <y>160</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="LineEdit_07">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>190</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="DbLabel">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>300</y>
-          <width>151</width>
-          <height>16</height>
+          <x>5</x>
+          <y>165</y>
+          <width>51</width>
+          <height>17</height>
          </rect>
         </property>
         <property name="text">
-         <string>Database</string>
+         <string>Indexes</string>
         </property>
        </widget>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_3">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>701</width>
-      <height>721</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="PlotLayout">
-     <item>
-      <widget class="QStackedWidget" name="StackedPlots">
-       <widget class="QWidget" name="page_1">
-        <widget class="QWidget" name="formLayoutWidget_4">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>701</width>
-           <height>721</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="FormLayout_01"/>
-        </widget>
-       </widget>
-       <widget class="QWidget" name="page_2">
-        <widget class="QWidget" name="formLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>701</width>
-           <height>721</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="FormLayout_02"/>
-        </widget>
-       </widget>
-       <widget class="QWidget" name="page_3">
-        <widget class="QWidget" name="formLayoutWidget_2">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>701</width>
-           <height>721</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="FormLayout_03"/>
-        </widget>
-       </widget>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QLabel" name="SaveFolderLabel">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>720</y>
-      <width>331</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>save folder</string>
-    </property>
-   </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>720</x>
-      <y>330</y>
-      <width>171</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="BinningLayout">
-     <item>
-      <widget class="QFrame" name="BinningFrame">
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QPushButton" name="BinButton">
+       <widget class="QLabel" name="Label_01">
         <property name="geometry">
          <rect>
-          <x>10</x>
+          <x>5</x>
+          <y>10</y>
+          <width>19</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Bin</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="LineEdit_04">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>103</y>
+          <width>81</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="LineEdit_01">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
           <y>10</y>
           <width>81</width>
-          <height>31</height>
+          <height>25</height>
          </rect>
         </property>
-        <property name="text">
-         <string>Bin traces</string>
+        <property name="readOnly">
+         <bool>false</bool>
         </property>
        </widget>
       </widget>
-     </item>
-    </layout>
-   </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>904</width>
-     <height>21</height>
+     <width>792</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
