@@ -1,14 +1,12 @@
-# active_receiver
+# plugin Seismic Bin Attributes and Binning
 
-Selects the nearest bin, pops up another window for fold, rose and spider diagrams. Pressing bin traces creates a fold plot.
+## Another little QGIS tool for seismic acquisition
 
-## About
-Another little QGIS tool for seismic acquisition
+Click with the mouse on the canvas to select the nearest bin. A seperate window pops up that displays offset, spider and rose diagrams. Change to another bin manually by typing a different bin (src, rcv), seperated by a space or comma.
 
-## Author
-Bruno Vermeulen <bruno.vermeulen@hotmail.com>
+By pressing the button "Bin traces" this will bin traces using the selected offset and source indexes.
 
-## Repository
-- Homepage:
-- Repository: https://github.com/bvermeulen/QGIS/tree/posix_qgis4/plugins/bin_select
-- Tracker:
+
+![til](./binning_clipchamp.gif)
+
+The data is stored in a SQLite database with tables bins and traces. To create this database from SPS (R, S, X) files, this is done using the app in the repsoitory [binning_cpp](https://github.com/bvermeulen/binning_cpp).
