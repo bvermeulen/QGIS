@@ -48,7 +48,6 @@ button_style_active = """
 """
 
 
-
 class BinningThread(QThread):
     binning_finished = pyqtSignal()
 
@@ -210,7 +209,6 @@ class BinAttributesView(QtWidgets.QMainWindow):
         figure_dict["Spider"] = self.plt_spider.diagram()
         figure_dict["Rose"] = self.plt_rose.diagram()
         self.update_canvas_data(figure_dict)
-        self.show()
         del self.plt_offset
         del self.plt_spider
         del self.plt_rose
@@ -229,6 +227,13 @@ class BinAttributesView(QtWidgets.QMainWindow):
 
     def show_plot(self, plot_index: int):
         self.StackedPlots.setCurrentIndex(plot_index)
+
+    def resizeEvent(self, event):
+        self.resize_timer.start(MOUSE_RELEASE_TRIGGER)
+        super().resizeEvent(event)
+
+    def handle_resize_release(self):
+        self.create_attribute_figs()
 
     def bin_traces(self):
         self.BinButton.setText("Binning ...")
@@ -278,13 +283,6 @@ class BinAttributesView(QtWidgets.QMainWindow):
                 ]
             )
             fig.savefig(file_name)
-
-    def resizeEvent(self, event):
-        self.resize_timer.start(MOUSE_RELEASE_TRIGGER)
-        super().resizeEvent(event)
-
-    def handle_resize_release(self):
-        self.create_attribute_figs()
 
     def closeEvent(self, event):
         self.selected_bin_changed.emit("quit")
