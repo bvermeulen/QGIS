@@ -81,7 +81,7 @@ class SelectMapTool(QgsMapToolEmitPoint):
         if changed_bin_val == "quit":
             self.remove_marker()
 
-        elif changed_bin_val == "new_bin":
+        elif changed_bin_val == "new_foldplot":
             renderer = self.layer.renderer()
             method = QgsClassificationFixedInterval()
             method.setParameterValues({"INTERVAL": 3.0})

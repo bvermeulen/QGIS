@@ -5,7 +5,7 @@ email: bvermeulen@hotmail.com
 admin@howdiweb.nl
 """
 
-MOUSE_RELEASE_TRIGGER = 1000
+MOUSE_RELEASE_TRIGGER = 350
 FIGSIZE_PYQT_PLOT = (6.3125, 5.833)
 
 import time
@@ -208,6 +208,8 @@ class BinAttributesView(QtWidgets.QMainWindow):
         figure_dict["Offset"] = self.plt_offset.diagram()
         figure_dict["Spider"] = self.plt_spider.diagram()
         figure_dict["Rose"] = self.plt_rose.diagram()
+        bin_loc_str = ", ".join([str(easting), str(northing)])
+        self.selected_bin_changed.emit(bin_loc_str)
         self.update_canvas_data(figure_dict)
         del self.plt_offset
         del self.plt_spider
@@ -252,7 +254,7 @@ class BinAttributesView(QtWidgets.QMainWindow):
         self.BinButton.setStyleSheet(button_syle)
         self.BinButton.setEnabled(True)
         self.worker.deleteLater()
-        self.selected_bin_changed.emit("new_bin")
+        self.selected_bin_changed.emit("new_foldplot")
 
     def select_save_folder(self):
         save_folder = QtWidgets.QFileDialog.getExistingDirectory(
